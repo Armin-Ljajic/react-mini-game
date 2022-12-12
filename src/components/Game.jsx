@@ -165,7 +165,7 @@ return (
           floatIntensity={0.6}> */}
              {/* <Plane rotation={[-Math.PI / 2, 0, 0]} userData={{ id: "floor" }} /> */}
              {debug && <Debug/>}
-                {/* <SwampModel/> */}
+                <SwampModel/>
                 <Model/>
              {/* <SceneParticles/> */}
               
