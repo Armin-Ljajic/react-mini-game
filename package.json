@@ -15,6 +15,7 @@
     "drei": "^2.2.21",
     "get-image-pixels": "^1.0.1",
     "lamina": "^1.1.23",
+    "leva": "^0.9.34",
     "manny": "^3.2.3",
     "perlin": "^1.0.0",
     "perlin.js": "^1.0.0",

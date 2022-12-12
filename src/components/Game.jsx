@@ -9,10 +9,11 @@ import { useState } from "react";
 import {SwampModel} from './Swamp_location.js';
 import { Physics, RigidBody, Debug, CuboidCollider, WorldApi, RoundCuboidCollider } from "@react-three/rapier";
 import { SceneParticles } from "./SceneParticles.jsx";
+import { useControls } from 'leva'
 
 
 function Game() {
-  
+  const { debug } = useControls({ debug: false })
 
   function Lighting() {
     return (
@@ -156,16 +157,17 @@ return (
           <Suspense fallback={null}>
           <Environment background={"only"} files={process.env.PUBLIC_URL + "textures/bg.hdr"}/>            
           <Environment background={false} files={process.env.PUBLIC_URL + "textures/envmap.hdr"}/>
-          <Physics>
+          <Physics
+          gravity={[0, -9.81, 0]}>
           {/* <Float 
           speed={0.5}
           rotationIntensity={0.6}
           floatIntensity={0.6}> */}
              {/* <Plane rotation={[-Math.PI / 2, 0, 0]} userData={{ id: "floor" }} /> */}
-             <Debug/>
+             {debug && <Debug/>}
                 {/* <SwampModel/> */}
                 <Model/>
-             <SceneParticles/>
+             {/* <SceneParticles/> */}
               
                 
                   

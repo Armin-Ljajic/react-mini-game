@@ -45,11 +45,13 @@ const useForwardRaycast = (obj) => {
   const raycaster = useMemo(() => new Raycaster(), [])
   const pos = useMemo(() => new Vector3(), [])
   const dir = useMemo(() => new Vector3(), [])
+  dir.set(0, -1 , 0)
   const scene = useThree((state) => state.scene)
   
   return () => {
     if (!obj.current) return []
-    raycaster.set(obj.current.getWorldPosition(pos), obj.current.getWorldDirection(dir))
+    // raycaster.set(obj.current.getWorldPosition(pos), obj.current.getWorldDirection(dir))
+    raycaster.set(obj.current.getWorldPosition(pos), dir)
     return raycaster.intersectObjects(scene.children)
   }
 }
@@ -65,9 +67,10 @@ export function Model({action, position}) {
   const previousAction = usePrevious(action);
   const camera = useThree(state => state.camera);
   const {scene} = useThree();
-  const { rapier, world } = useRapier();
+  const { rapier, world, rigidBody} = useRapier();
+  const swampRaycaster = useMemo(() => new Raycaster(), [])
 
-  const api = useRef(null);
+  const api = useRef();
   const ref = useRef();
   const swampRef = useRef();
   const raycast = useForwardRaycast(ref);
@@ -161,7 +164,7 @@ export function Model({action, position}) {
           angleYCameraDirection + newDirectionOffset
         )
         model.scene.quaternion.rotateTowards(rotateQuarternion, 0.2);
-
+        
         
         
         // calculate direction
@@ -174,10 +177,19 @@ export function Model({action, position}) {
         let velocity = currentAction.current == "RunForward" ? 4 : 1.8;
           //intersections
           
+          
         const intersections = raycast();
         const swampIntersections = swampRaycast();
         // const intersections = raycaster.intersectObjects(swampModel, false)
         // var intersects = raycaster.intersectObjects(model, true);
+        var origin = new THREE.Vector3();
+        var direction = new THREE.Vector3();
+
+        origin.set(model.scene.position.x, model.scene.position.y, model.scene.position.z);
+        direction.set(0, -1 , 0);
+        raycaster.set(origin, direction)
+        var hit = raycaster.intersectObjects(model.scene, true)
+
         
         
 
@@ -194,10 +206,40 @@ export function Model({action, position}) {
         );
         // console.log(walkable)
         
+      //     const translation = api.current.translation();
+      //   if (translation.y < -1) {
+      //     // don't fall below ground
+      //     translation.x= 0;
+      //     translation.y = 10;
+      //     translation.z = 0;
+      const translation = api.current.translation();
+      if (translation.y < -1) {
+        // don't fall below ground
+           model.scene.position.x = 0
+            model.scene.position.y = 10 
+            model.scene.position.z =  0 
+        }
+    
+      // } else {
+        walkDirection.y += (storedFall, -9.81 * delta, 0.10)
+        storedFall = walkDirection.y
+        if(intersections.length > 0){
+          model.scene.position.copy(intersections[0].point)
+          const point = intersections[0].point;
+          let diff = model.scene.position.y - (point.y + 0.28);
+          if(diff < 0.0){
+            storedFall = 0;
+            walkDirection.y += lerp(0, Math.abs(diff), 0.5);
+            // intersections[0].point.y = model.scene.position.y += moveY;
+            console.log(point);
+          }
+        }
         // update model and camera
         const moveX = walkDirection.x * velocity * delta;
+        // let moveY = walkDirection.y * velocity * delta;
         const moveZ = walkDirection.z * velocity * delta;
-        const moveY = walkDirection.y * velocity * delta;
+        // const moveY = walkDirection.y * velocity * delta;
+       
         // if(intersections.some(x => x.object.name === "MapGeometry")){
         //   velocity = 0;
         //   model.scene.position.x += 0.025;
@@ -205,13 +247,36 @@ export function Model({action, position}) {
         // }
         
         // let moveY = walkDirection.y * velocity * delta;
-        intersections[0].point.x = model.scene.position.x += moveX;
-        intersections[0].point.y = model.scene.position.y += moveY;
-        intersections[0].point.z = model.scene.position.z += moveZ;
+       
+        
+        translation.x = model.scene.position.x += moveX;
+        translation.y = model.scene.position.y += walkDirection.y
+        translation.z = model.scene.position.z += moveZ;
+
+        updateCameraTarget(moveX, moveZ);
+
+        
+
+        // intersections[0].point.y = model.scene.position.z += moveY;
+        // model.scene.position.x += moveX;
+        // model.scene.position.z += moveZ;
+        
         
         // intersections[0].point.y = model.scene.position.y += moveY;
-            
-            updateCameraTarget(moveX, moveZ);
+        
+
+          
+
+
+            if(intersections.length > 0){
+              const n = new THREE.Vector3()
+              // n.transformDirection(intersections[0].object.matrixWorld)
+  
+                // model.scene.position.transformDirection(intersections[0].object.matrixWorld)
+                // model.scene.position.copy(intersections[0].point)
+                
+                // model.scene.position.copy(intersections.filter(x => x.object.name === "MapGround").map(x => x.point))
+            }
 
             // console.log(intersections.filter(x => x.object.name === "MapGeometry")[0].point)
             // console.log(swampRef.current.uuid)
@@ -228,7 +293,7 @@ export function Model({action, position}) {
             //         moveY = lerp(0, Math.abs(diff), 0.5)
             //     }
             // }
-          console.log(intersections.filter(x => x.object.name === "MapGround").map(x => x.point))
+          // console.log(intersections.filter(x => x.object.name === "MapGround").map(x => x.point))
         
         
 
@@ -262,13 +327,7 @@ export function Model({action, position}) {
           // raycaster.set(model.scene.position, down);
           // const ground = raycaster.intersectObjects(walkable)[0];
           // if (intersections.length > 0)
-          if(intersections.length > 0){
-            const n = new THREE.Vector3()
-            // n.transformDirection(intersections[0].object.matrixWorld)
-            
-              model.scene.position.copy(intersections[0].point) 
-              // model.scene.position.copy(intersections.filter(x => x.object.name === "MapGround").map(x => x.point))
-          }
+          
         
       };
       
@@ -282,7 +341,7 @@ export function Model({action, position}) {
 
           <OrbitControls ref={controlsRef} target={model.scene.position}/>
           <group>
-            <RigidBody colliders="ball" type="kinematicPosition" onCollisionEnter={({ manifold, target, other }) => {
+            <RigidBody ref={api} colliders="ball" type="kinematicPosition" onCollisionEnter={({ manifold, target, other }) => {
                     // console.log(
                     //   "Collision at world position ",
                     //   manifold.solverContactPoint(0)
@@ -298,17 +357,18 @@ export function Model({action, position}) {
                     }
 
                     }}>
-              <primitive object={model.scene} ref={ref} name="Archer" position={[-0.2, 3.1, 32]}/>
+              <primitive object={model.scene} ref={ref} name="Archer" position={[-0.2, 3.1, 32]}/> 
+              
             </RigidBody>
-            {/* <RigidBody type="fixed" colliders="trimesh">
-              <primitive object={swampModel.scene} ref={SwampModelRef}/>
+            {/* <RigidBody type="fixed" colliders="trimesh" rotation={[-Math.PI / 2, 0, 0]}>
+              <primitive object={swampModel.scene} ref={SwampModelRef} />
             </RigidBody> */}
             <RigidBody colliders="trimesh" type="fixed" rotation={[-Math.PI / 2, 0, 0]}>
               <mesh geometry={nodes.Object_2.geometry} material={materials.map_1blinn6SG}/>
-              <mesh geometry={nodes.Object_3.geometry} material={materials.map_1lambert4SG} name="MapGround"/>
+              <mesh geometry={nodes.Object_3.geometry} material={materials.map_1lambert4SG} ref={swampRef} name="MapGround"/>
               <mesh geometry={nodes.Object_4.geometry} material={materials.map_1object}/>
-              <mesh geometry={nodes.Object_5.geometry} material={materials.map_1object} ref={swampRef} name="MapGeometry"/>
-              <mesh geometry={nodes.Object_6.geometry} material={materials.map_1lambert5SG}  /> 
+              <mesh geometry={nodes.Object_5.geometry} material={materials.map_1object}  name="MapGeometry"/>
+              <mesh geometry={nodes.Object_6.geometry} material={materials.map_1lambert5SG}/> 
             </RigidBody>
           </group>
 
