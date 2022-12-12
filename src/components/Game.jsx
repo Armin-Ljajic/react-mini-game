@@ -1,4 +1,4 @@
-import { OrbitControls, PerspectiveCamera, useFBX, useGLTF, PointerLockControls, useAnimations, Float, Plane, Box} from "@react-three/drei";
+import { OrbitControls, PerspectiveCamera, useFBX, useGLTF, PointerLockControls, useAnimations, Float, Plane, Box, Environment} from "@react-three/drei";
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { Canvas, useThree, useFrame, useLoader } from "@react-three/fiber";
@@ -8,6 +8,7 @@ import {Model} from './Archer.js'
 import { useState } from "react";
 import {SwampModel} from './Swamp_location.js';
 import { Physics, RigidBody, Debug, CuboidCollider, WorldApi, RoundCuboidCollider } from "@react-three/rapier";
+import { SceneParticles } from "./SceneParticles.jsx";
 
 
 function Game() {
@@ -147,12 +148,14 @@ return (
           fov: 75,
           near: 0.1,
           far: 1000,
-          position: [10, 11, 11],
+          position: [-0.2, 20, 43],
         }}
       >
           <ambientLight/>
           <pointLight position={[10, 10, 10]}/>
           <Suspense fallback={null}>
+          <Environment background={"only"} files={process.env.PUBLIC_URL + "textures/bg.hdr"}/>            
+          <Environment background={false} files={process.env.PUBLIC_URL + "textures/envmap.hdr"}/>
           <Physics>
           {/* <Float 
           speed={0.5}
@@ -161,9 +164,8 @@ return (
              {/* <Plane rotation={[-Math.PI / 2, 0, 0]} userData={{ id: "floor" }} /> */}
              <Debug/>
                 {/* <SwampModel/> */}
-             <Suspense fallback={null}>
                 <Model/>
-             </Suspense>
+             <SceneParticles/>
               
                 
                   

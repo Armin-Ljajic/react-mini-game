@@ -280,7 +280,7 @@ export function Model({action, position}) {
     return (
     <>
 
-          <OrbitControls ref={controlsRef}/>
+          <OrbitControls ref={controlsRef} target={model.scene.position}/>
           <group>
             <RigidBody colliders="ball" type="kinematicPosition" onCollisionEnter={({ manifold, target, other }) => {
                     // console.log(
@@ -298,7 +298,7 @@ export function Model({action, position}) {
                     }
 
                     }}>
-              <primitive object={model.scene} ref={ref} name="Archer"/>
+              <primitive object={model.scene} ref={ref} name="Archer" position={[-0.2, 3.1, 32]}/>
             </RigidBody>
             {/* <RigidBody type="fixed" colliders="trimesh">
               <primitive object={swampModel.scene} ref={SwampModelRef}/>
