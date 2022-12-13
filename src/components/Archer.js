@@ -9,7 +9,7 @@ import {Quaternion, Raycaster, Vector3, BoxHelper} from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useInput } from '../hooks/useInput';
 import { Physics, RapierCollider, RigidBody, useRapier } from '@react-three/rapier';
-import { useBox, useConvexPolyhedron } from '@react-three/cannon';
+import { useBox, useConvexPolyhedron, useSpring } from '@react-three/cannon';
 import { Geometry } from "three-stdlib";
 import { lerp } from 'three/src/math/MathUtils';
 import { SwampModel } from './Swamp_location';
@@ -61,9 +61,10 @@ export function Model({action, position}) {
   const group = useRef()
   const currentAction = useRef("");
   const controlsRef = useRef(OrbitControls);
-  const {forward, backward, left, right, jump, shift} = useInput();
-  const model = useGLTF('/ErikaArcherWithAnimationsRotated.glb');
+  const {forward, backward, left, right, jump, shift, shoot} = useInput();
+  const model = useGLTF('/ErikaArcherWithAimingAnimations.glb');
   const { actions } = useAnimations(model.animations, model.scene)
+  const { mixer } = useAnimations(model.animations)
   const previousAction = usePrevious(action);
   const camera = useThree(state => state.camera);
   const {scene} = useThree();
@@ -103,10 +104,20 @@ export function Model({action, position}) {
   const down = new THREE.Vector3(0, -1, 0);
   const raycaster = new THREE.Raycaster();
   let storedFall = 0;
-  var boundingBoxHelperObject = new THREE.BoxHelper()
   const velocity = useRef([0, 0, 0]);
+
+  // const animation = useSpring({
+  //   to: async (next) => {
+  //     if(shoot){
+  //       await next({action: "StandingDrawArrow"}),
+  //       await next({action: "StandingDrawArrowRelease"});
+  //     }
+  //   }
+  // })
+  
   useEffect(() => {
-    
+
+   
     // console.log(actions)
     if(previousAction){
       // actions[previousAction].stop()
@@ -123,9 +134,18 @@ export function Model({action, position}) {
       }
     } else if(jump){
       action = "Jump";
+    } else if(shoot){
+      action = "StandingDrawArrow";
+      if(shoot === false){
+        action = "StandingDrawArrowRelease"
+      }
+  
+      
+      // action = "StandingDrawArrowRelease"
+      // console.log(shoot)
     } else{
       action = "Idle";
-    }
+    } 
 
     if(currentAction.current != action){
       const nextActionToPlay = actions[action];
@@ -135,10 +155,11 @@ export function Model({action, position}) {
       currentAction.current = action;
     }
 
+    
     // actions[action].play();
     // nodes.Armature.position.x;
 
-    }, [action, actions, forward, backward, left, right, jump, shift]);
+    }, [action, actions, forward, backward, left, right, jump, shift, shoot]);
 
 
     useFrame((state, delta) => {
@@ -150,6 +171,7 @@ export function Model({action, position}) {
           camera.position.x - model.scene.position.x,
           camera.position.z - model.scene.position.z
         )
+        console.log(actions)
 
         //diagonal movement angle offset
         let newDirectionOffset = directionOffset({
@@ -165,8 +187,7 @@ export function Model({action, position}) {
         )
         model.scene.quaternion.rotateTowards(rotateQuarternion, 0.2);
         
-        
-        
+
         // calculate direction
         camera.getWorldDirection(walkDirection);
         walkDirection.y = 0;
@@ -175,54 +196,31 @@ export function Model({action, position}) {
 
         // run/walk velocity
         let velocity = currentAction.current == "RunForward" ? 4 : 1.8;
-          //intersections
-          
-          
+
+
+        //intersections
         const intersections = raycast();
         const swampIntersections = swampRaycast();
-        // const intersections = raycaster.intersectObjects(swampModel, false)
-        // var intersects = raycaster.intersectObjects(model, true);
-        var origin = new THREE.Vector3();
-        var direction = new THREE.Vector3();
-
-        origin.set(model.scene.position.x, model.scene.position.y, model.scene.position.z);
-        direction.set(0, -1 , 0);
-        raycaster.set(origin, direction)
-        var hit = raycaster.intersectObjects(model.scene, true)
-
         
-        
-
-        // arrowHelper.setDirection(n)
-        // if (intersections[0].point.y < -1) {
-        //     // don't fall below ground
-        //     model.scene.position.y = 10;
-        //     model.scene.position.x = 0;
-        //     model.scene.position.z = 0;
-           
-        // } 
         const walkable = scene.children.filter(
           (o) => o.children[0]?.uuid !== ref?.current?.uuid
         );
-        // console.log(walkable)
-        
-      //     const translation = api.current.translation();
-      //   if (translation.y < -1) {
-      //     // don't fall below ground
-      //     translation.x= 0;
-      //     translation.y = 10;
-      //     translation.z = 0;
+  
       const translation = api.current.translation();
       if (translation.y < -1) {
         // don't fall below ground
-           model.scene.position.x = 0
-            model.scene.position.y = 10 
-            model.scene.position.z =  0 
+            // model.scene.position.x = 0;
+            // model.scene.position.y = 10; 
+            // model.scene.position.z =  0;
+            translation.x = 0;
+            translation.y = 10; 
+            translation.z =  0;
         }
     
       // } else {
         walkDirection.y += (storedFall, -9.81 * delta, 0.10)
         storedFall = walkDirection.y
+        
         if(intersections.length > 0){
           model.scene.position.copy(intersections[0].point)
           const point = intersections[0].point;
@@ -230,24 +228,14 @@ export function Model({action, position}) {
           if(diff < 0.0){
             storedFall = 0;
             walkDirection.y += lerp(0, Math.abs(diff), 0.5);
-            // intersections[0].point.y = model.scene.position.y += moveY;
-            console.log(point);
+            // console.log(point);
           }
         }
+
         // update model and camera
         const moveX = walkDirection.x * velocity * delta;
-        // let moveY = walkDirection.y * velocity * delta;
         const moveZ = walkDirection.z * velocity * delta;
-        // const moveY = walkDirection.y * velocity * delta;
-       
-        // if(intersections.some(x => x.object.name === "MapGeometry")){
-        //   velocity = 0;
-        //   model.scene.position.x += 0.025;
-        //   model.scene.position.z += 0.025;
-        // }
         
-        // let moveY = walkDirection.y * velocity * delta;
-       
         
         translation.x = model.scene.position.x += moveX;
         translation.y = model.scene.position.y += walkDirection.y
@@ -257,77 +245,7 @@ export function Model({action, position}) {
 
         
 
-        // intersections[0].point.y = model.scene.position.z += moveY;
-        // model.scene.position.x += moveX;
-        // model.scene.position.z += moveZ;
-        
-        
-        // intersections[0].point.y = model.scene.position.y += moveY;
-        
 
-          
-
-
-            if(intersections.length > 0){
-              const n = new THREE.Vector3()
-              // n.transformDirection(intersections[0].object.matrixWorld)
-  
-                // model.scene.position.transformDirection(intersections[0].object.matrixWorld)
-                // model.scene.position.copy(intersections[0].point)
-                
-                // model.scene.position.copy(intersections.filter(x => x.object.name === "MapGround").map(x => x.point))
-            }
-
-            // console.log(intersections.filter(x => x.object.name === "MapGeometry")[0].point)
-            // console.log(swampRef.current.uuid)
-          
-            // moveY += lerp(storedFall, -9.81 * delta, 0.10)
-            // storedFall = moveY
-          
-            // if (intersections.length > 0) {
-            //     // const point = this.ray.pointAt(hit.toi);
-            //     const point = intersections[0].point
-            //     let diff = model.scene.position.y - ( point.y + 0.28);
-            //     if (diff < 0.0) {
-            //         storedFall = 0
-            //         moveY = lerp(0, Math.abs(diff), 0.5)
-            //     }
-            // }
-          // console.log(intersections.filter(x => x.object.name === "MapGround").map(x => x.point))
-        
-        
-
-        // move model & camera
-        // const moveX = walkDirection.x * velocity * delta;
-        // const moveZ = walkDirection.z * velocity * delta;
-        // intersections[0].point.x = model.scene.position.x += moveX
-        // intersections[0].point.z = model.scene.position.z += moveZ
-        // updateCameraTarget(moveX, moveZ);
-
-
-
-          // walkDirection.y += lerp(storedFall, -9.81 * delta, 0.10)
-          // storedFall = walkDirection.y;
-  
-          // if(intersections.length > 0){
-          //   const point = intersections[0].point;
-          //   let diff = model.scene.position.y  - ( point.y + 0.28);
-          //   if (diff < 0.0) {
-          //       storedFall = 0
-          //       walkDirection.y = lerp(0, Math.abs(diff), 0.5)
-          //   }
-          // }
-          // const moveX = walkDirection.x * velocity * delta;
-          // let moveY = walkDirection.y * velocity * delta;
-          // const moveZ = walkDirection.z * velocity * delta;
-  
-          // intersections[0].point.x = model.scene.position.x += moveX
-          // intersections[0].point.y = model.scene.position.y += moveY;  
-          // intersections[0].point.z = model.scene.position.z += moveZ
-          // raycaster.set(model.scene.position, down);
-          // const ground = raycaster.intersectObjects(walkable)[0];
-          // if (intersections.length > 0)
-          
         
       };
       
@@ -358,18 +276,17 @@ export function Model({action, position}) {
 
                     }}>
               <primitive object={model.scene} ref={ref} name="Archer" position={[-0.2, 3.1, 32]}/> 
-              
             </RigidBody>
             {/* <RigidBody type="fixed" colliders="trimesh" rotation={[-Math.PI / 2, 0, 0]}>
               <primitive object={swampModel.scene} ref={SwampModelRef} />
             </RigidBody> */}
-            <RigidBody colliders="trimesh" type="fixed" rotation={[-Math.PI / 2, 0, 0]}>
+            {/* <RigidBody colliders="trimesh" type="fixed" rotation={[-Math.PI / 2, 0, 0]}>
               <mesh geometry={nodes.Object_2.geometry} material={materials.map_1blinn6SG}/>
               <mesh geometry={nodes.Object_3.geometry} material={materials.map_1lambert4SG} ref={swampRef} name="MapGround"/>
               <mesh geometry={nodes.Object_4.geometry} material={materials.map_1object}/>
               <mesh geometry={nodes.Object_5.geometry} material={materials.map_1object}  name="MapGeometry"/>
               <mesh geometry={nodes.Object_6.geometry} material={materials.map_1lambert5SG}/> 
-            </RigidBody>
+            </RigidBody> */}
           </group>
 
             

@@ -8,6 +8,7 @@ export const useInput = () => {
         right: false,
         shift: false,
         jump: false,
+        shoot: false
     });
 
     const keys = {
@@ -16,7 +17,8 @@ export const useInput = () => {
         KeyA: "left",
         KeyD: "right",
         ShiftLeft: "shift",
-        Space: "jump"
+        Space: "jump",
+        Digit1: "shoot"
     }
 
     const findKey = ((key) => keys[key])
@@ -30,12 +32,27 @@ export const useInput = () => {
             setInput((m) => ({...m, [findKey(e.code)]: false}));
         }
 
+        // const handleMouseClickDown = (e) => {
+        //     setInput((m) => ({...m, [findKey(e.code)]: true}));
+        // }
+
+        // const handleMouseRelease = (e) => {
+        //     setInput((m) => ({...m, [findKey(e.code)]: false}));
+        // }
+
         document.addEventListener("keydown", handleKeyDown);
         document.addEventListener("keyup", handleKeyUp);
+
+        // document.addEventListener("mousedown", handleMouseClickDown);
+        // document.addEventListener("mouseup", handleMouseRelease);
+
 
         return () => {
             document.addEventListener("keydown", handleKeyDown);
             document.addEventListener("keyup", handleKeyUp);
+
+            // document.addEventListener("mousedown", handleMouseClickDown);
+            // document.addEventListener("mouseup", handleMouseRelease);
         };
     
     }, [])

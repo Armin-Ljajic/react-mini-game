@@ -157,8 +157,7 @@ return (
           <Suspense fallback={null}>
           <Environment background={"only"} files={process.env.PUBLIC_URL + "textures/bg.hdr"}/>            
           <Environment background={false} files={process.env.PUBLIC_URL + "textures/envmap.hdr"}/>
-          <Physics
-          gravity={[0, -9.81, 0]}>
+          <Physics>
           {/* <Float 
           speed={0.5}
           rotationIntensity={0.6}
@@ -168,7 +167,22 @@ return (
                 <SwampModel/>
                 <Model/>
              {/* <SceneParticles/> */}
-              
+             <CuboidCollider castShadow args={[25, 10, 0.2]} position={[0, 5, 38]} name="Wall" />
+              <CuboidCollider castShadow args={[25, 10, 0.2]} position={[0, 5, -36]} name="Wall" />
+              <CuboidCollider
+              name="Wall"
+              castShadow
+                args={[75, 10, 0.2]}
+                rotation={[0, -Math.PI / 2, 0]}
+                position={[10, 5, 1]}
+              />
+              <CuboidCollider
+              name="Wall"
+              castShadow
+                args={[75, 10, 0.2]}
+                rotation={[0, -Math.PI / 2, 0]}
+                position={[-7, 5, 1]}
+              />
                 
                   
                   {/*tree.map((tree) => {
