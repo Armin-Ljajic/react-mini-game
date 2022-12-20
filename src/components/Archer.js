@@ -259,18 +259,21 @@ export function Model({action, position}) {
 
       let cameraDirection = new Vector3();
       camera.getWorldDirection(cameraDirection);
+
+      // camera.position.set(
+      //   model.scene.position.x,
+      //   model.scene.position.y +8,
+      //   model.scene.position.z +10
+      // );
       
       //Shooting
-      // let arrowTranslation = arrowRef.current.translation();
+      // let arrowTranslation = arrowRef.current.position
       const arrowDirection = cameraDirection.clone().multiplyScalar(arrowSpeed)
       // arrowTranslation = cameraDirection.clone().multiplyScalar(arrowSpeed);
-      const arrowPosition = model.scene.position.clone()
+
+      const arrowPosition = camera.position.clone()
       .add(cameraDirection.clone().multiplyScalar(2))
 
-      // console.log(camera.position)
-      // console.log(arrowDirection, "arrowDirection")
-      // console.log(arrowPosition, "arrowPosition")
-      // console.log(model.scene.position)
       if(shoot) {
         const now = Date.now();
         if (now >= timeToShoot) {
@@ -281,12 +284,10 @@ export function Model({action, position}) {
               id: now,
               position: [arrowPosition.x, arrowPosition.y, arrowPosition.z],
               forward: [arrowDirection.x, arrowDirection.y, arrowDirection.z]
-              // forward: [arrowTranslation.x, arrowTranslation.y, arrowTranslation.z]
             }
           ]);
         }
       }
-
     });
     
     const { nodes, materials } = useGLTF('/swamp_location.glb')
@@ -340,22 +341,7 @@ export function Model({action, position}) {
 
           <OrbitControls ref={controlsRef} target={model.scene.position}/>
           <group>
-            <RigidBody ref={api} colliders="ball" type="kinematicPosition" onCollisionEnter={({ manifold, target, other }) => {
-                    // console.log(
-                    //   "Collision at world position ",
-                    //   manifold.solverContactPoint(0)
-                    // )
-                    if (other.rigidBodyObject) {
-                      console.log(
-                        // this rigid body's Object3Da
-                        target.rigidBodyObject,
-                        " collided with ",
-                        // the other rigid body's Object3D
-                        other.rigidBodyObject,
-                      );
-                    }
-
-                    }}>
+            <RigidBody ref={api} colliders="ball" type="kinematicPosition" >
               <primitive object={model.scene} ref={ref} name="Archer" position={[-0.2, 3.1, 32]}/> 
             </RigidBody>
             {/* <RigidBody type="fixed" colliders="trimesh" rotation={[-Math.PI / 2, 0, 0]}>
@@ -372,7 +358,7 @@ export function Model({action, position}) {
             {/* <Arrows/> */}
             {arrows.map((arrow) => {
               return (
-                <RigidBody type="kinematicPosition" colliders="cuboid" ref={arrowRef} >
+                <RigidBody type="kinematicPosition" colliders="trimesh" ref={arrowRef} >
                     <Arrow 
                       rotation={[0, 5 ,0]} 
                       position={[arrow.position]} 

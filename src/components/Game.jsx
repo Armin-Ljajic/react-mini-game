@@ -10,6 +10,7 @@ import {SwampModel} from './Swamp_location.js';
 import { Physics, RigidBody, Debug, CuboidCollider, WorldApi, RoundCuboidCollider } from "@react-three/rapier";
 import { SceneParticles } from "./SceneParticles.jsx";
 import { useControls } from 'leva'
+import HealthBar from "./HealthBar.jsx";
 
 
 function Game() {
@@ -143,6 +144,7 @@ function AppGame(){
 return (
   <>
     <div style={{ height: "100vh", width: "100%" }}>
+    
     <Canvas
         // flat
         camera={{
