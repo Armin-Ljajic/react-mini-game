@@ -14,6 +14,8 @@ import { Geometry } from "three-stdlib";
 import { lerp } from 'three/src/math/MathUtils';
 import { SwampModel } from './Swamp_location';
 import { Arrow } from './Arrow';
+import { PlaneBufferGeometry } from 'three';
+import { MeshStandardMaterial } from 'three';
 
 const directionOffset = ({forward, backward, left, right}) => {
   var directionOffset = 0; // w
@@ -79,6 +81,7 @@ export function Model({action, position}) {
   const swampRef = useRef();
   const raycast = useForwardRaycast(ref);
   const swampRaycast = useForwardRaycast(swampRef);
+  const arrowRef = useRef();
 
   const arrowSpeed = 30;
   const arrowCoolDown = 300;
@@ -116,21 +119,12 @@ export function Model({action, position}) {
   const down = new THREE.Vector3(0, -1, 0);
   const raycaster = new THREE.Raycaster();
   let storedFall = 0;
-  const arrowDirection = useRef();
-
-  // const animation = useSpring({
-  //   to: async (next) => {
-  //     if(shoot){
-  //       await next({action: "StandingDrawArrow"}),
-  //       await next({action: "StandingDrawArrowRelease"});
-  //     }
-  //   }
-  // })
+  
   
   useEffect(() => {
 
    
-    // console.log(actions)
+    
     if(previousAction){
       // actions[previousAction].stop()
     }
@@ -149,9 +143,10 @@ export function Model({action, position}) {
     } else if(shoot){
       action = "StandingDrawArrow";
       
-      // if(actions[action].time >= 0.6152333968877788){
-      //   action = "StandingDrawArrowRelease"
-      // }      
+      if(actions[action].time >= 0.6152333968877788){
+        // action = "StandingDrawArrowRelease"
+        // nextActionToPlay?.reset().fadeIn().play();
+      }      
       // const time = Date.now();
       
       // action = "StandingDrawArrowRelease"
@@ -184,7 +179,7 @@ export function Model({action, position}) {
           camera.position.x - model.scene.position.x,
           camera.position.z - model.scene.position.z
         )
-        console.log(actions)
+        // console.log(actions)
 
         //diagonal movement angle offset
         let newDirectionOffset = directionOffset({
@@ -260,15 +255,22 @@ export function Model({action, position}) {
         
       };
 
+      
+
       let cameraDirection = new Vector3();
       camera.getWorldDirection(cameraDirection);
+      
       //Shooting
-     let arrowTranslationDirection = arrowDirection.current.translation 
-     arrowTranslationDirection = walkDirection.clone().multiplyScalar(arrowSpeed)
+      // let arrowTranslation = arrowRef.current.translation();
+      const arrowDirection = cameraDirection.clone().multiplyScalar(arrowSpeed)
+      // arrowTranslation = cameraDirection.clone().multiplyScalar(arrowSpeed);
       const arrowPosition = model.scene.position.clone()
-      .add(arrowTranslationDirection.clone().multiplyScalar(2))
+      .add(cameraDirection.clone().multiplyScalar(2))
 
-      console.log(arrowTranslationDirection.x, arrowPosition.x)
+      // console.log(camera.position)
+      // console.log(arrowDirection, "arrowDirection")
+      // console.log(arrowPosition, "arrowPosition")
+      // console.log(model.scene.position)
       if(shoot) {
         const now = Date.now();
         if (now >= timeToShoot) {
@@ -277,8 +279,9 @@ export function Model({action, position}) {
             ...arrows,
             {
               id: now,
-              position: [arrowPosition.x, arrowPosition.y+1.3, arrowPosition.z],
+              position: [arrowPosition.x, arrowPosition.y, arrowPosition.z],
               forward: [arrowDirection.x, arrowDirection.y, arrowDirection.z]
+              // forward: [arrowTranslation.x, arrowTranslation.y, arrowTranslation.z]
             }
           ]);
         }
@@ -288,6 +291,49 @@ export function Model({action, position}) {
     
     const { nodes, materials } = useGLTF('/swamp_location.glb')
     const swampModel = useGLTF('/swamp_location.glb');
+
+    function ShootController() {
+      return (
+        <mesh position={[0, 0, -8]}
+        onClick={() => setArrows([
+          ...arrows,
+          {
+            id: Math.random(), // This needs to be unique.. Random isn't perfect but it works. Could use a uuid here.
+            x: 0,
+            y: 0,
+            z: 0,
+            velocity: [model.scene.rotation.x * 6, model.scene.rotation.y * 5, model.scene.rotation.z * 5]
+          }
+        ])}>
+          <planeGeometry attach="geometry" args={[100, 100]} />
+            <meshStandardMaterial
+              attach="material"
+              color="orange"
+              emissive="#ff0860"
+              visible={true}
+            />
+        </mesh>
+      )
+    }
+
+    function Arrows(){
+      return (
+        <group>
+            {arrows.map((arrow) => {
+              return (
+                <RigidBody type="dynamic" colliders="cuboid" ref={arrowRef} >
+                    <Arrow 
+                      rotation={[0, 5 ,0]} 
+                      position={[arrow.position]} 
+                      key={`${arrow.id}`}
+                    />
+                </RigidBody>
+              );
+          })}
+      </group>
+      )
+      
+    }
 
     return (
     <>
@@ -322,18 +368,20 @@ export function Model({action, position}) {
               <mesh geometry={nodes.Object_5.geometry} material={materials.map_1object}  name="MapGeometry"/>
               <mesh geometry={nodes.Object_6.geometry} material={materials.map_1lambert5SG}/> 
             </RigidBody> */}
+            {/* <ShootController/> */}
+            {/* <Arrows/> */}
             {arrows.map((arrow) => {
               return (
-                <RigidBody ref={arrowDirection}>
+                <RigidBody type="kinematicPosition" colliders="cuboid" ref={arrowRef} >
                     <Arrow 
+                      rotation={[0, 5 ,0]} 
+                      position={[arrow.position]} 
+                      velocity={[arrow.forward]}
                       key={`${arrow.id}`}
-                      // velocity={arrow.forward}
-                      position={arrow.position}
-                      rotation={[0 ,5 , 0]}
                     />
                 </RigidBody>
               );
-            })}
+          })}
           </group>
 
             

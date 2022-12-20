@@ -1,10 +1,10 @@
 import { useSphere, Physics } from "@react-three/cannon";
 import { useGLTF } from "@react-three/drei";
 import { RigidBody, Box} from "@react-three/rapier";
-import React, { Suspense } from "react";
+import React, { Suspense, useRef } from "react";
 
 export const Arrow = (props) => {
-  
+
     const model = useGLTF("/arrow.glb")
 
   return (
