@@ -277,15 +277,22 @@ export function Model({action, position}) {
       if(shoot) {
         const now = Date.now();
         if (now >= timeToShoot) {
-          timeToShoot = now + arrowCoolDown;
-          setArrows((arrows) => [
-            ...arrows,
-            {
-              id: now,
-              position: [arrowPosition.x, arrowPosition.y, arrowPosition.z],
-              forward: [arrowDirection.x, arrowDirection.y, arrowDirection.z]
-            }
-          ]);
+          // timeToShoot = now + arrowCoolDown;
+          // setArrows((arrows) => [
+          //   ...arrows,
+          //   {
+          //     id: now,
+          //     position: [arrowPosition.x, arrowPosition.y, arrowPosition.z],
+          //     forward: [arrowDirection.x, arrowDirection.y, arrowDirection.z]
+          //   }
+          // ]);
+          setArrows([...arrows, {
+            key: now,
+            position: [arrowPosition, arrowPosition.y, arrowPosition.z],
+            direction: [arrowDirection.x, arrowDirection.y, arrowDirection.z],
+            speed: 15
+          }].slice(-10))
+          console.log(arrows)
         }
       }
     });
@@ -326,6 +333,7 @@ export function Model({action, position}) {
                     <Arrow 
                       rotation={[0, 5 ,0]} 
                       position={[arrow.position]} 
+                      velocity={[arrow.forward]}
                       key={`${arrow.id}`}
                     />
                 </RigidBody>
@@ -356,7 +364,9 @@ export function Model({action, position}) {
             </RigidBody> */}
             {/* <ShootController/> */}
             {/* <Arrows/> */}
-            {arrows.map((arrow) => {
+            
+          </group>
+          {/* {arrows.map((arrow) => {
               return (
                 <RigidBody type="kinematicPosition" colliders="trimesh" ref={arrowRef} >
                     <Arrow 
@@ -367,8 +377,12 @@ export function Model({action, position}) {
                     />
                 </RigidBody>
               );
+          })} */}
+          {arrows.map(({key, ...props}) => {
+            <RigidBody>
+              <Arrow key={key} {...props}/>
+            </RigidBody>
           })}
-          </group>
 
             
             
