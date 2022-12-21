@@ -12,7 +12,7 @@ import { SceneParticles } from "./SceneParticles.jsx";
 import { useControls } from 'leva'
 import HealthBar from "./HealthBar.jsx";
 import { useEffect } from "react";
-import Enemy from "./Enemy.jsx";
+import {Enemy} from '../components/Enemy'
 
 
 

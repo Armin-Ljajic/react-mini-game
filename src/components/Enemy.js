@@ -1,10 +1,10 @@
-import { useGLTF } from "drei";
+import { useGLTF } from "@react-three/drei";
 import { useState } from "react";
 import { Suspense } from "react";
 import { useFrame } from "react-three-fiber";
 
 
-const Enemy= () => {
+export const Enemy= () => {
 
     const model = useGLTF('/Enemy.glb')
     const [toggle, setToggle] = useState(false);
@@ -16,10 +16,11 @@ const Enemy= () => {
     return (
         <>
         <Suspense fallback={null}>
-            <primitive object={model.scene} onClick={() => setToggle(!toggle)} scale={toggle ? 1.5 : 1}/>
+            <mesh onClick={() => setToggle(!toggle)}>
+                <primitive object={model.scene}  scale={toggle ? 1.5 : 1}/>
+            </mesh>
         </Suspense>
         </>
     )
 }
 
-export default Enemy;

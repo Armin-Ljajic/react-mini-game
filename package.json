@@ -12,7 +12,6 @@
     "@testing-library/user-event": "^13.5.0",
     "@use-it/event-listener": "^0.1.7",
     "cannon": "^0.6.2",
-    "drei": "^2.2.21",
     "get-image-pixels": "^1.0.1",
     "lamina": "^1.1.23",
     "leva": "^0.9.34",
