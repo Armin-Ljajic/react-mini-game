@@ -6,7 +6,7 @@ import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useGLTF, useAnimations, PerspectiveCamera, OrbitControls, CycleRaycast , useHelper, PointerLockControls} from '@react-three/drei'
 import * as THREE from 'three';
 import {Quaternion, Raycaster, Vector3, BoxHelper} from 'three';
-import { useFrame, useThree } from '@react-three/fiber';
+import { useFrame, useThree, extend } from '@react-three/fiber';
 import { useInput } from '../hooks/useInput';
 import { Physics, RapierCollider, RigidBody, useRapier } from '@react-three/rapier';
 import { useBox, useConvexPolyhedron, useSpring } from '@react-three/cannon';
@@ -16,6 +16,7 @@ import { SwampModel } from './Swamp_location';
 import { Arrow } from './Arrow';
 import { PlaneBufferGeometry } from 'three';
 import { MeshStandardMaterial } from 'three';
+
 
 const directionOffset = ({forward, backward, left, right}) => {
   var directionOffset = 0; // w
@@ -65,6 +66,7 @@ export function Model({action, position}) {
   const controlsRef = useRef(OrbitControls);
   const {forward, backward, left, right, jump, shift, shoot} = useInput();
   const model = useGLTF('/ErikaArcherWithAimingAnimationsNew.glb');
+  const arrowModel = useGLTF("/arrow.glb")
   const { actions } = useAnimations(model.animations, model.scene)
   const { mixer } = useAnimations(model.animations)
   const previousAction = usePrevious(action);
@@ -83,7 +85,7 @@ export function Model({action, position}) {
   const swampRaycast = useForwardRaycast(swampRef);
   const arrowRef = useRef();
 
-  const arrowSpeed = 30;
+  const arrowSpeed = 80;
   const arrowCoolDown = 300;
   let timeToShoot = 0;
 
@@ -120,6 +122,7 @@ export function Model({action, position}) {
   const raycaster = new THREE.Raycaster();
   let storedFall = 0;
   
+
   
   useEffect(() => {
 
@@ -129,7 +132,8 @@ export function Model({action, position}) {
       // actions[previousAction].stop()
     }
     let action = "";
-
+    const now = Date.now();
+    
     if(forward|| backward || left || right){
       action = "WalkForward";
       if(shift){
@@ -140,19 +144,16 @@ export function Model({action, position}) {
       }
     } else if(jump){
       action = "Jump";
+
     } else if(shoot){
       action = "StandingDrawArrow";
-      
-      if(actions[action].time >= 0.6152333968877788){
-        // action = "StandingDrawArrowRelease"
-        // nextActionToPlay?.reset().fadeIn().play();
-      }      
-      // const time = Date.now();
-      
-      // action = "StandingDrawArrowRelease"
-      // console.log(shoot)
+      console.log(actions[action]._mixer._actions[12])
+      actions[action].crossFadeTo(actions[action]._mixer._actions[12], 0.5, false);
+      // actions[action]?.setLoop(THREE.LoopOnce)
+
     } else{
       action = "Idle";
+
     } 
 
     if(currentAction.current != action){
@@ -260,97 +261,86 @@ export function Model({action, position}) {
       let cameraDirection = new Vector3();
       camera.getWorldDirection(cameraDirection);
 
-      // camera.position.set(
-      //   model.scene.position.x,
-      //   model.scene.position.y +8,
-      //   model.scene.position.z +10
-      // );
-      
       //Shooting
-      // let arrowTranslation = arrowRef.current.position
-      const arrowDirection = cameraDirection.clone().multiplyScalar(arrowSpeed)
-      // arrowTranslation = cameraDirection.clone().multiplyScalar(arrowSpeed);
+      const arrowDirectionX = cameraDirection.x * arrowSpeed * delta;
+      const arrowDirectionY = cameraDirection.y * arrowSpeed * delta;
+      const arrowDirectionZ = cameraDirection.z * arrowSpeed * delta;
 
-      const arrowPosition = camera.position.clone()
+      arrowModel.scene.position.x += arrowDirectionX
+      arrowModel.scene.position.y += arrowDirectionY
+      arrowModel.scene.position.z += arrowDirectionZ
+
+      const arrowPosition = model.scene.position.clone()
       .add(cameraDirection.clone().multiplyScalar(2))
 
-      if(shoot) {
+      if(currentAction.current === "StandingDrawArrow") {
         const now = Date.now();
         if (now >= timeToShoot) {
-          // timeToShoot = now + arrowCoolDown;
-          // setArrows((arrows) => [
-          //   ...arrows,
-          //   {
-          //     id: now,
-          //     position: [arrowPosition.x, arrowPosition.y, arrowPosition.z],
-          //     forward: [arrowDirection.x, arrowDirection.y, arrowDirection.z]
-          //   }
-          // ]);
-          setArrows([...arrows, {
-            key: now,
-            position: [arrowPosition, arrowPosition.y, arrowPosition.z],
-            direction: [arrowDirection.x, arrowDirection.y, arrowDirection.z],
-            speed: 15
-          }].slice(-10))
-          console.log(arrows)
+          timeToShoot = now + arrowCoolDown;
+          setArrows((arrows) => [
+            ...arrows,
+            {
+              id: now,
+              position: [arrowPosition.x, arrowPosition.y+1.5, arrowPosition.z],
+              rotation: [cameraDirection.x+5, cameraDirection.y+5, cameraDirection.z+5]
+              // forward: [arrowModel.scene.position.x += arrowDirectionX, arrowModel.scene.position.y += arrowDirectionY, arrowModel.scene.position.z += arrowDirectionZ]
+            }
+          ]);
         }
       }
     });
-    
-    const { nodes, materials } = useGLTF('/swamp_location.glb')
-    const swampModel = useGLTF('/swamp_location.glb');
 
-    function ShootController() {
-      return (
-        <mesh position={[0, 0, -8]}
-        onClick={() => setArrows([
-          ...arrows,
-          {
-            id: Math.random(), // This needs to be unique.. Random isn't perfect but it works. Could use a uuid here.
-            x: 0,
-            y: 0,
-            z: 0,
-            velocity: [model.scene.rotation.x * 6, model.scene.rotation.y * 5, model.scene.rotation.z * 5]
-          }
-        ])}>
-          <planeGeometry attach="geometry" args={[100, 100]} />
-            <meshStandardMaterial
-              attach="material"
-              color="orange"
-              emissive="#ff0860"
-              visible={true}
-            />
-        </mesh>
-      )
-    }
+    // function ShootController() {
+    //   return (
+    //     <mesh position={[0, 0, -8]}
+    //     onClick={() => setArrows([
+    //       ...arrows,
+    //       {
+    //         id: Math.random(), // This needs to be unique.. Random isn't perfect but it works. Could use a uuid here.
+    //         x: 0,
+    //         y: 0,
+    //         z: 0,
+    //         velocity: [model.scene.rotation.x * 6, model.scene.rotation.y * 5, model.scene.rotation.z * 5]
+    //       }
+    //     ])}>
+    //       <planeGeometry attach="geometry" args={[100, 100]} />
+    //         <meshStandardMaterial
+    //           attach="material"
+    //           color="orange"
+    //           emissive="#ff0860"
+    //           visible={true}
+    //         />
+    //     </mesh>
+    //   )
+    // }
 
-    function Arrows(){
-      return (
-        <group>
-            {arrows.map((arrow) => {
-              return (
-                <RigidBody type="dynamic" colliders="cuboid" ref={arrowRef} >
-                    <Arrow 
-                      rotation={[0, 5 ,0]} 
-                      position={[arrow.position]} 
-                      velocity={[arrow.forward]}
-                      key={`${arrow.id}`}
-                    />
-                </RigidBody>
-              );
-          })}
-      </group>
-      )
+    // function Arrows(){
+    //   return (
+    //     <group>
+    //         {arrows.map((arrow) => {
+    //           return (
+    //             <RigidBody type="dynamic" colliders="cuboid" ref={arrowRef} >
+    //                 <Arrow 
+    //                   rotation={[0, 5 ,0]} 
+    //                   position={arrow.position} 
+    //                   velocity={arrow.forward}
+    //                   key={`${arrow.id}`}
+    //                 />
+    //             </RigidBody>
+    //           );
+    //       })}
+    //   </group>
+    //   )
       
-    }
+    // }
 
     return (
     <>
-
+          
           <OrbitControls ref={controlsRef} target={model.scene.position}/>
           <group>
             <RigidBody ref={api} colliders="ball" type="kinematicPosition" >
-              <primitive object={model.scene} ref={ref} name="Archer" position={[-0.2, 3.1, 32]}/> 
+              <primitive object={model.scene} ref={ref} name="Archer" key={model.scene.uuid} position={[-0.2, 3.1, 32]}/> 
             </RigidBody>
             {/* <RigidBody type="fixed" colliders="trimesh" rotation={[-Math.PI / 2, 0, 0]}>
               <primitive object={swampModel.scene} ref={SwampModelRef} />
@@ -364,25 +354,35 @@ export function Model({action, position}) {
             </RigidBody> */}
             {/* <ShootController/> */}
             {/* <Arrows/> */}
-            
+          
           </group>
-          {/* {arrows.map((arrow) => {
+            
+          {arrows.map((arrow) => {
               return (
-                <RigidBody type="kinematicPosition" colliders="trimesh" ref={arrowRef} >
-                    <Arrow 
-                      rotation={[0, 5 ,0]} 
-                      position={[arrow.position]} 
-                      velocity={[arrow.forward]}
-                      key={`${arrow.id}`}
-                    />
+                <RigidBody type="kinematicPosition" colliders="trimesh" >
+                  {/* <Arrow 
+                    rotation={[0, 5 ,0]} 
+                    position={arrow.position} 
+                    // velocity={arrow.forward}
+                    key={`${arrow.id}`}
+                  /> */}
+                  <primitive 
+                  visible={!shoot}
+                  object={arrowModel.scene} 
+                  ref={arrowRef} 
+                  position={arrow.position} 
+                  key={`${arrow.id}`} 
+                  scale={0.010}
+                  rotation={arrow.rotation}
+                  />
                 </RigidBody>
               );
-          })} */}
-          {arrows.map(({key, ...props}) => {
+          })}
+          {/* {arrows.map(({key, ...props}) => {
             <RigidBody>
               <Arrow key={key} {...props}/>
             </RigidBody>
-          })}
+          })} */}
 
             
             

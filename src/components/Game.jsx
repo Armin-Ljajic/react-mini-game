@@ -1,7 +1,7 @@
 import { OrbitControls, PerspectiveCamera, useFBX, useGLTF, PointerLockControls, useAnimations, Float, Plane, Box, Environment} from "@react-three/drei";
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
-import { Canvas, useThree, useFrame, useLoader } from "@react-three/fiber";
+import { Canvas, useThree, useFrame, useLoader, extend} from "@react-three/fiber";
 import {useBox, usePlane } from "@react-three/cannon";
 import { Suspense, useMemo, useRef } from "react";
 import {Model} from './Archer.js'
@@ -11,10 +11,14 @@ import { Physics, RigidBody, Debug, CuboidCollider, WorldApi, RoundCuboidCollide
 import { SceneParticles } from "./SceneParticles.jsx";
 import { useControls } from 'leva'
 import HealthBar from "./HealthBar.jsx";
+import { useEffect } from "react";
+import Enemy from "./Enemy.jsx";
+
 
 
 function Game() {
   const { debug } = useControls({ debug: false })
+
 
   function Lighting() {
     return (
@@ -33,40 +37,8 @@ function Game() {
       </>
     );
   }
- 
-  const grass = useMemo(() => {
-    const grass = [];
-    for (let i = 0; i < 300; i++) {
-      const rndPos = [
-        Math.floor(Math.random() * 200) - 100,
-        0,
-        Math.floor(Math.random() * 200) - 100
-      ];
-      grass.push({ pos: rndPos, rotation: Math.floor(Math.random() * 200) });
-    }
-    return grass;
-  });
 
-  const tree = useMemo(() => {
-    const tree = [];
-    for (let i = 0; i < 250; i++) {
-      const rndPos = [
-        Math.floor(Math.random() * 200) - 100,
-        0,
-        Math.floor(Math.random() * 200) - 100
-      ];
-      tree.push({ pos: rndPos, rotation: Math.floor(Math.random() * 200) });
-    }
-    return tree;
-  });
 
-  const Ground = () => {
-    return (
-      <RigidBody colliders="hull" type="fixed">
-        <Plane args={[30, 86]} rotation={[-Math.PI / 2, 0, 0]}/>
-      </RigidBody>
-    )
-  }
 
   // const texture = useLoader(TextureLoader, 'grass_texture.jpg');
   // const Plane = (props) => {
@@ -159,7 +131,7 @@ return (
           <Suspense fallback={null}>
           <Environment background={"only"} files={process.env.PUBLIC_URL + "textures/bg.hdr"}/>            
           <Environment background={false} files={process.env.PUBLIC_URL + "textures/envmap.hdr"}/>
-          <Physics>
+          <Physics allowSleep={false}>
           {/* <Float 
           speed={0.5}
           rotationIntensity={0.6}
@@ -168,6 +140,7 @@ return (
              {debug && <Debug/>}
                 <SwampModel/>
                 <Model/>
+                <Enemy/>
              {/* <SceneParticles/> */}
              <CuboidCollider castShadow args={[25, 10, 0.2]} position={[0, 5, 38]} name="Wall" />
               <CuboidCollider castShadow args={[25, 10, 0.2]} position={[0, 5, -36]} name="Wall" />

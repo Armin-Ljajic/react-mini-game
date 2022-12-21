@@ -3,25 +3,25 @@ import { useGLTF } from "@react-three/drei";
 import { RigidBody, Box} from "@react-three/rapier";
 import React, { Suspense, useEffect, useRef } from "react";
 
-export const Arrow = ({position, direction, speed}) => {
+export const Arrow = (props) => {
 
     const model = useGLTF("/arrow.glb")
     const ref = useRef();
-    const [x, y, z] = position
-    const [dx, dy, dz] = direction
+    // const [x, y, z] = position
+    // const [dx, dy, dz] = direction
 
-    useEffect(() => {
-      ref.transform.setPosition(x + dx, y + dy, z + dz)
-      ref.update()
-    }, [ref, x, y, z, dx, dy, dz])
+    // useEffect(() => {
+    //   ref.transform.setPosition(x + dx, y + dy, z + dz)
+    //   ref.update()
+    // }, [ref, x, y, z, dx, dy, dz])
   
-    useEffect(() => {
-      ref.velocity.set(dx * speed, dy * speed, dz * speed)
-      ref.update()
-    }, [ref, dx, dy, dz, speed])
+    // useEffect(() => {
+    //   ref.velocity.set(dx * speed, dy * speed, dz * speed)
+    //   ref.update()
+    // }, [ref, dx, dy, dz, speed])
 
   return (
-        <mesh ref={ref} position={position}>
+        <mesh ref={ref}>
           <primitive object={model.scene} scale={0.005}/>
         </mesh>
   );
