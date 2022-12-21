@@ -290,50 +290,6 @@ export function Model({action, position}) {
       }
     });
 
-    // function ShootController() {
-    //   return (
-    //     <mesh position={[0, 0, -8]}
-    //     onClick={() => setArrows([
-    //       ...arrows,
-    //       {
-    //         id: Math.random(), // This needs to be unique.. Random isn't perfect but it works. Could use a uuid here.
-    //         x: 0,
-    //         y: 0,
-    //         z: 0,
-    //         velocity: [model.scene.rotation.x * 6, model.scene.rotation.y * 5, model.scene.rotation.z * 5]
-    //       }
-    //     ])}>
-    //       <planeGeometry attach="geometry" args={[100, 100]} />
-    //         <meshStandardMaterial
-    //           attach="material"
-    //           color="orange"
-    //           emissive="#ff0860"
-    //           visible={true}
-    //         />
-    //     </mesh>
-    //   )
-    // }
-
-    // function Arrows(){
-    //   return (
-    //     <group>
-    //         {arrows.map((arrow) => {
-    //           return (
-    //             <RigidBody type="dynamic" colliders="cuboid" ref={arrowRef} >
-    //                 <Arrow 
-    //                   rotation={[0, 5 ,0]} 
-    //                   position={arrow.position} 
-    //                   velocity={arrow.forward}
-    //                   key={`${arrow.id}`}
-    //                 />
-    //             </RigidBody>
-    //           );
-    //       })}
-    //   </group>
-    //   )
-      
-    // }
-
     return (
     <>
           
