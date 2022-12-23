@@ -59,6 +59,21 @@ const useForwardRaycast = (obj) => {
   }
 }
 
+const useArrowRaycast = (obj) => {
+  const raycaster = useMemo(() => new Raycaster(), [])
+  const pos = useMemo(() => new Vector3(), [])
+  const dir = useMemo(() => new Vector3(), [])
+  dir.set(0, 0, -1)
+  const scene = useThree((state) => state.scene)
+  
+  return () => {
+    if (!obj.current) return []
+    // raycaster.set(obj.current.getWorldPosition(pos), obj.current.getWorldDirection(dir))
+    raycaster.set(obj.current.getWorldPosition(pos), dir)
+    return raycaster.intersectObjects(scene.children)
+  }
+}
+
 export function Model({action, position}) {
 
   const group = useRef()
@@ -81,20 +96,15 @@ export function Model({action, position}) {
     timeToShoot: 0
   });
   const swampRef = useRef();
+  const arrowRef = useRef();
   const raycast = useForwardRaycast(ref);
   const swampRaycast = useForwardRaycast(swampRef);
-  const arrowRef = useRef();
+  const arrowRaycast = useArrowRaycast(arrowRef);
+ 
 
   const arrowSpeed = 80;
   const arrowCoolDown = 300;
   let timeToShoot = 0;
-
-  const state = useRef({
-    timeToShoot: 0,
-    timeTojump: 0,
-    vel: [0, 0, 0],
-    jumping: false
-  });
 
   const updateCameraTarget = (moveX, moveZ) => {
     // move camera
@@ -147,8 +157,6 @@ export function Model({action, position}) {
 
     } else if(shoot){
       action = "StandingDrawArrow";
-      console.log(actions[action]._mixer._actions[12])
-      actions[action].crossFadeTo(actions[action]._mixer._actions[12], 0.5, false);
       // actions[action]?.setLoop(THREE.LoopOnce)
 
     } else{
@@ -210,6 +218,7 @@ export function Model({action, position}) {
         //intersections
         const intersections = raycast();
         const swampIntersections = swampRaycast();
+        
         
         const walkable = scene.children.filter(
           (o) => o.children[0]?.uuid !== ref?.current?.uuid
@@ -274,6 +283,7 @@ export function Model({action, position}) {
       .add(cameraDirection.clone().multiplyScalar(2))
 
       if(currentAction.current === "StandingDrawArrow") {
+        
         const now = Date.now();
         if (now >= timeToShoot) {
           timeToShoot = now + arrowCoolDown;
@@ -288,6 +298,12 @@ export function Model({action, position}) {
           ]);
         }
       }
+      // const arrowIntersections = arrowRaycast();
+      // // console.log(arrowModel.nodes.hanzo_arrow_LP__0.geometry)
+      // if(arrowIntersections.length > 0){
+      //   console.log("HIT");
+      // }
+      
     });
 
     return (
