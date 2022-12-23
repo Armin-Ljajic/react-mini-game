@@ -86,7 +86,7 @@ export const Enemy= () => {
     let storedFall = 0;
     const camera = useThree(state => state.camera);
     const {click} = useInput();
-
+    const targetRef = useRef();
     const handleClick = () => {
         setToggle(!toggle)
     }
@@ -106,7 +106,7 @@ export const Enemy= () => {
 
     }, [actions, toggle])
 
-    useFrame((state, delta) => {
+    useFrame((state, delta, clock) => {
         //Calculate direction
         camera.getWorldDirection(walkDirection);
         walkDirection.y = 0;
@@ -115,51 +115,58 @@ export const Enemy= () => {
 
         
         const intersections = raycaster();
-
-
+        targetRef.current.rotation.x = clock.getElapsedTime()
         
 
-        const translation = api.current.translation();
-        if (translation.y < -1) {
-              translation.x = 0;
-              translation.y = 10; 
-              translation.z =  0;
-          }
+        // const translation = api.current.translation();
+        // if (translation.y < -1) {
+        //       translation.x = 0;
+        //       translation.y = 10; 
+        //       translation.z =  0;
+        //   }
 
-          walkDirection.y += (storedFall, -9.81 * delta, 0.10)
-          storedFall = walkDirection.y
+        //   walkDirection.y += (storedFall, -9.81 * delta, 0.10)
+        //   storedFall = walkDirection.y
 
-          if(intersections.length > 0){
-            model.scene.position.copy(intersections[0].point)
-            const point = intersections[0].point;
-            let diff = model.scene.position.y - (point.y + 0.28);
-            if(diff < 0.0){
-                storedFall = 0;
-                walkDirection.y += lerp(0, Math.abs(diff), 0.5);
-                // console.log(point);
-              }
-          }
+        //   if(intersections.length > 0){
+        //     model.scene.position.copy(intersections[0].point)
+        //     const point = intersections[0].point;
+        //     let diff = model.scene.position.y - (point.y + 0.28);
+        //     if(diff < 0.0){
+        //         storedFall = 0;
+        //         walkDirection.y += lerp(0, Math.abs(diff), 0.5);
+        //         // console.log(point);
+        //       }
+        //   }
     })
 
     return (
         <>
         <Suspense fallback={null}>
             <group>
-            <mesh>
-                <RigidBody type="kinematicPosition" colliders="cuboid" ref={api} >
-                    <primitive 
-                    object={model.scene} 
-                    position={[2.5, 0.5, 20]} 
-                    onClick={() => handleClick() }
-                    scale={toggle ? 2 : 1}
-                    ref={ref} 
-                    />
-                </RigidBody>
-                <Marker rotation={[0, Math.PI / 2, Math.PI / 2]}>
-                    {/* <div style={{ position: 'absolute', fontSize: 10, letterSpacing: -0.5, left: 17.5 }}>north</div> */}
-                    <GiVirtualMarker style={{ color: 'indianred' }} />
-                </Marker>
-            </mesh>
+                <mesh>
+                <group position={[2.5, 0.5, 20]}>
+                    <RigidBody colliders="cuboid" type="kinematicPosition" ref={api}>
+                        <primitive 
+                        object={model.scene} 
+                        onClick={() => handleClick() }
+                        ref={ref} 
+                        />
+                    </RigidBody>
+                    <mesh>
+                        <Marker rotation={[0, Math.PI / 2, Math.PI / 2]} position={[0, 3, 0]} >
+                            {/* <div style={{ position: 'absolute', fontSize: 10, letterSpacing: -0.5, left: 17.5 }}>north</div> */}
+                            <GiVirtualMarker 
+                            style={{ color: 'indianred' }} 
+                            transparent="true" 
+                            opacity={toggle ? 1 : 0} 
+                            scale={2}
+                            ref={targetRef}/>
+                        </Marker>
+                    </mesh>
+                    
+                </group>
+                </mesh>
             </group>
         </Suspense>
         </>
