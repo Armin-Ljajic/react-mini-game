@@ -90,6 +90,7 @@ export const Enemy= ({position}) => {
     const raycasterMouse = new THREE.Raycaster()
     const scene = useThree((state) => state.scene)
     const [selected, setSelected] = useState([])
+    const [enemyPosition, setEnemyPosition] = useState([]);
 
 
     const arrowHelper = new THREE.ArrowHelper(
@@ -106,8 +107,13 @@ export const Enemy= ({position}) => {
     }
 
     useEffect(() => {
-        position = model.scene.position;
-        let action = "Idle";
+
+      setEnemyPosition(model.scene.position)
+      position = enemyPosition;
+      console.log(position)
+      console.log(model.scene.position)
+
+      let action = "Idle";
         const playIdle = actions[action];
         playIdle?.play()
 
@@ -121,7 +127,7 @@ export const Enemy= ({position}) => {
             // raycasterMouse.setFromCamera(mouse, cameraPerspective);
 
             const intersects = raycasterMouse.intersectObjects(scene.children, false)
-            console.log(intersects.length)
+            // console.log(intersects.length)
             if(intersects.length > 0){
                 const n = new THREE.Vector3()
                 n.copy((intersects[0].face).normal)
@@ -160,6 +166,7 @@ export const Enemy= ({position}) => {
         model.nodes.MAW.geometry.boundingBox.max.x += 5;
         model.nodes.MAW.geometry.boundingBox.max.y += 5;
         model.nodes.MAW.geometry.boundingBox.max.z += 5;
+        console.log(model.scene.position)
         // console.log(model.nodes.MAW)
 
         // console.log(selected)

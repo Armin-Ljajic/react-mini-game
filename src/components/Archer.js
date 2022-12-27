@@ -16,6 +16,9 @@ import { SwampModel } from './Swamp_location';
 import { Arrow } from './Arrow';
 import { PlaneBufferGeometry } from 'three';
 import { MeshStandardMaterial } from 'three';
+import { Enemy } from './Enemy';
+import Target from './Target';
+import { AimTarget } from './AimTarget';
 
 
 const directionOffset = ({forward, backward, left, right}) => {
@@ -90,6 +93,7 @@ export function Model({action, position}) {
   const { rapier, world, rigidBody} = useRapier();
   const swampRaycaster = useMemo(() => new Raycaster(), [])
   const [arrows, setArrows] = useState([]);
+  const [ePos, setEPos] = useState({})
 
   const api = useRef();
   const ref = useRef({
@@ -101,6 +105,8 @@ export function Model({action, position}) {
   const swampRaycast = useForwardRaycast(swampRef);
   const arrowRaycast = useArrowRaycast(arrowRef);
   let enemyPosition = new THREE.Vector3();
+  let cameraDirection = new Vector3();
+      
  
 
   const arrowSpeed = 80;
@@ -137,7 +143,8 @@ export function Model({action, position}) {
   
   useEffect(() => {
 
-   
+   setEPos(enemyPosition);
+   console.log(enemyPosition)
     
     if(previousAction){
       // actions[previousAction].stop()
@@ -180,7 +187,7 @@ export function Model({action, position}) {
     }, [action, actions, forward, backward, left, right, jump, shift, shoot]);
 
 
-    useFrame((state, delta) => {
+    useFrame((state, delta, mouse) => {
       if(currentAction.current === "WalkForward" ||
       currentAction.current === "RunForward"
       ) {
@@ -261,6 +268,7 @@ export function Model({action, position}) {
         translation.z = model.scene.position.z += moveZ;
 
         updateCameraTarget(moveX, moveZ);
+        
 
        
         
@@ -268,7 +276,6 @@ export function Model({action, position}) {
 
       
 
-      let cameraDirection = new Vector3();
       camera.getWorldDirection(cameraDirection);
 
       //Shooting
@@ -315,7 +322,9 @@ export function Model({action, position}) {
           target={model.scene.position} 
           minPolarAngle={0} 
           maxPolarAngle={Math.PI / 2}
+          maxDistance={100}
           />
+          <AimTarget position={camera.position}/>
           <group>
             <RigidBody ref={api} colliders="ball" type="kinematicPosition" >
               <primitive 
@@ -360,6 +369,9 @@ export function Model({action, position}) {
                 </RigidBody>
               );
           })}
+
+          {/* <Enemy position={enemyPosition}/> */}
+          <Target/>
           {/* {arrows.map(({key, ...props}) => {
             <RigidBody>
               <Arrow key={key} {...props}/>

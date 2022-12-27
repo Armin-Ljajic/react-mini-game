@@ -13,6 +13,7 @@ import { useControls } from 'leva'
 import HealthBar from "./HealthBar.jsx";
 import { useEffect } from "react";
 import {Enemy} from '../components/Enemy'
+import { AimTarget } from "./AimTarget.js";
 
 
 
@@ -120,10 +121,11 @@ return (
     <Canvas
         // flat
         camera={{
-          fov: 75,
+          fov: 20,
           near: 0.1,
           far: 1000,
-          position: [-0.2, 20, 43],
+          position: [-0.2, 15, 43],
+          
         }}
       >
           <ambientLight/>
@@ -140,7 +142,7 @@ return (
              {debug && <Debug/>}
                 <SwampModel/>
                 <Model/>
-                <Enemy/>
+                
              {/* <SceneParticles/> */}
              <CuboidCollider castShadow args={[25, 10, 0.2]} position={[0, 5, 38]} name="Wall" />
               <CuboidCollider castShadow args={[25, 10, 0.2]} position={[0, 5, -36]} name="Wall" />
