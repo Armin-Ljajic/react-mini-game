@@ -1,4 +1,4 @@
-import { Html, useAnimations, useGLTF } from "@react-three/drei";
+import { Html, Select, useAnimations, useGLTF } from "@react-three/drei";
 import { RigidBody } from "@react-three/rapier";
 import { useEffect, useRef, useState } from "react";
 import { useMemo } from "react";
@@ -58,64 +58,113 @@ const directionOffset = ({forward, backward, left, right}) => {
     return directionOffset;
   }
 
-const useForwardRaycast = (obj) => {
+const useForwardRaycast = (mouse, camera) => {
     const raycaster = useMemo(() => new Raycaster(), [])
     const pos = useMemo(() => new Vector3(), [])
     const dir = useMemo(() => new Vector3(), [])
-    dir.set(0, -1 , 0)
+    // dir.set(0, -1 , 0)
     const scene = useThree((state) => state.scene)
     
     return () => {
-      if (!obj.current) return []
-      // raycaster.set(obj.current.getWorldPosition(pos), obj.current.getWorldDirection(dir))
-      raycaster.set(obj.current.getWorldPosition(pos), dir)
+    //   if (!obj.current) return []
+    //   raycaster.set(obj.current.getWorldPosition(pos), obj.current.getWorldDirection(dir))
+    //   raycaster.setFromCamera(mouse, camera)
       return raycaster.intersectObjects(scene.children)
     }
   }
   
 
-export const Enemy= () => {
+export const Enemy= ({position}) => {
 
     const model = useGLTF('/Enemy.glb')
     const {actions} = useAnimations(model.animations, model.scene);
     const [toggle, setToggle] = useState(false);
     const ref = useRef();
     const api = useRef();
-    const raycaster = useForwardRaycast(ref);
+    const raycaster = useForwardRaycast();
     let walkDirection = new THREE.Vector3();
     let storedFall = 0;
     const camera = useThree(state => state.camera);
     const {click} = useInput();
     const targetRef = useRef();
+    const raycasterMouse = new THREE.Raycaster()
+    const scene = useThree((state) => state.scene)
+    const [selected, setSelected] = useState([])
+
+
+    const arrowHelper = new THREE.ArrowHelper(
+        new THREE.Vector3(),
+        new THREE.Vector3(),
+        0.25,
+        0xffff00
+    )
+  
+
     const handleClick = () => {
         setToggle(!toggle)
+        console.log(toggle);
     }
 
     useEffect(() => {
+        position = model.scene.position;
         let action = "Idle";
         const playIdle = actions[action];
         playIdle?.play()
 
+        function onMouseMove(event) {
+            const mouse = {
+                x: (event.clientX / document.documentElement.clientWidth) * 2 - 1,
+                y: -(event.clientY / document.documentElement.clientHeight) * 2 + 1,
+            }
+
+            
+            // raycasterMouse.setFromCamera(mouse, cameraPerspective);
+
+            const intersects = raycasterMouse.intersectObjects(scene.children, false)
+            console.log(intersects.length)
+            if(intersects.length > 0){
+                const n = new THREE.Vector3()
+                n.copy((intersects[0].face).normal)
+                n.transformDirection(intersects[0].object.matrixWorld)
         
-        
-        document.addEventListener("click", handleClick);
+                arrowHelper.setDirection(n)
+                arrowHelper.position.copy(intersects[0].point)
+            }
+        }
+        document.documentElement.addEventListener('mousemove', onMouseMove, false)
+
         return () => {
-            document.addEventListener("click", handleClick);
+            document.documentElement.addEventListener('mousemove', onMouseMove, false)
+        }
+        // document.addEventListener("click", handleClick);
+        // return () => {
+        //     document.addEventListener("click", handleClick);
         
-        };
+        // };
 
-    }, [actions, toggle])
 
-    useFrame((state, delta, clock) => {
+
+    }, [actions, toggle, position])
+
+    useFrame(({state, delta, clock}) => {
         //Calculate direction
         camera.getWorldDirection(walkDirection);
         walkDirection.y = 0;
         walkDirection.normalize();
         // walkDirection.applyAxisAngle(rotateAngle, newDirectionOffset)
 
-        
+        model.nodes.MAW.geometry.boundingBox.min.x += 5;
+        model.nodes.MAW.geometry.boundingBox.min.y += 5;
+        model.nodes.MAW.geometry.boundingBox.min.z += 5;
+
+        model.nodes.MAW.geometry.boundingBox.max.x += 5;
+        model.nodes.MAW.geometry.boundingBox.max.y += 5;
+        model.nodes.MAW.geometry.boundingBox.max.z += 5;
+        // console.log(model.nodes.MAW)
+
+        // console.log(selected)
         const intersections = raycaster();
-        targetRef.current.rotation.x = clock.getElapsedTime()
+        // targetRef.current.rotation.x = clock.getElapsedTime()
         
 
         // const translation = api.current.translation();
@@ -143,28 +192,27 @@ export const Enemy= () => {
     return (
         <>
         <Suspense fallback={null}>
-            <group>
-                <mesh>
+            <group >
+                <mesh >
                 <group position={[2.5, 0.5, 20]}>
                     <RigidBody colliders="cuboid" type="kinematicPosition" ref={api}>
                         <primitive 
                         object={model.scene} 
-                        onClick={() => handleClick() }
                         ref={ref} 
+                        onClick={(e) => console.log("clicked", e.target) }
                         />
                     </RigidBody>
-                    <mesh>
-                        <Marker rotation={[0, Math.PI / 2, Math.PI / 2]} position={[0, 3, 0]} >
+                    <mesh ref={targetRef}>
+                        <Marker rotation={[0, Math.PI / 1, Math.PI / 1]} position={[0, 3, 0]} >
                             {/* <div style={{ position: 'absolute', fontSize: 10, letterSpacing: -0.5, left: 17.5 }}>north</div> */}
                             <GiVirtualMarker 
                             style={{ color: 'indianred' }} 
                             transparent="true" 
                             opacity={toggle ? 1 : 0} 
                             scale={2}
-                            ref={targetRef}/>
+                            />
                         </Marker>
                     </mesh>
-                    
                 </group>
                 </mesh>
             </group>

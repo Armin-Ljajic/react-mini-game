@@ -100,6 +100,7 @@ export function Model({action, position}) {
   const raycast = useForwardRaycast(ref);
   const swampRaycast = useForwardRaycast(swampRef);
   const arrowRaycast = useArrowRaycast(arrowRef);
+  let enemyPosition = new THREE.Vector3();
  
 
   const arrowSpeed = 80;
@@ -309,10 +310,19 @@ export function Model({action, position}) {
     return (
     <>
           
-          <OrbitControls ref={controlsRef} target={model.scene.position}/>
+          <OrbitControls 
+          ref={controlsRef} 
+          target={model.scene.position} 
+          minPolarAngle={0} 
+          maxPolarAngle={Math.PI / 2}
+          />
           <group>
             <RigidBody ref={api} colliders="ball" type="kinematicPosition" >
-              <primitive object={model.scene} ref={ref} name="Archer" key={model.scene.uuid} position={[-0.2, 3.1, 32]}/> 
+              <primitive 
+              object={model.scene} 
+              ref={ref} name="Archer" 
+              key={model.scene.uuid} 
+              position={[-0.2, 3.05, 32]}/> 
             </RigidBody>
             {/* <RigidBody type="fixed" colliders="trimesh" rotation={[-Math.PI / 2, 0, 0]}>
               <primitive object={swampModel.scene} ref={SwampModelRef} />
