@@ -4,9 +4,13 @@ import { useGLTF, useAnimations, PerspectiveCamera, OrbitControls, CycleRaycast 
 
 
 
-export const Target = () => {
+export const Target = ({position}) => {
 
     const model = useGLTF("/target.glb")
+
+    useEffect(() => {
+        position = model.scene.position;
+    }, [])
 
     return (
         <>

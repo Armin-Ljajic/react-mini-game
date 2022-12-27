@@ -95,6 +95,8 @@ export function Model({action, position}) {
   const [arrows, setArrows] = useState([]);
   const [ePos, setEPos] = useState({})
 
+  const targetModel = useGLTF("/target.glb")
+
   const api = useRef();
   const ref = useRef({
     timeToShoot: 0
@@ -324,7 +326,7 @@ export function Model({action, position}) {
           maxPolarAngle={Math.PI / 2}
           maxDistance={100}
           />
-          <AimTarget position={camera.position}/>
+          {/* <AimTarget position={camera.position}/> */}
           <group>
             <RigidBody ref={api} colliders="ball" type="kinematicPosition" >
               <primitive 
@@ -371,7 +373,7 @@ export function Model({action, position}) {
           })}
 
           {/* <Enemy position={enemyPosition}/> */}
-          <Target/>
+          <Target position={cameraDirection}/>
           {/* {arrows.map(({key, ...props}) => {
             <RigidBody>
               <Arrow key={key} {...props}/>
