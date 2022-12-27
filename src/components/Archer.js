@@ -9,13 +9,10 @@ import {Quaternion, Raycaster, Vector3, BoxHelper} from 'three';
 import { useFrame, useThree, extend } from '@react-three/fiber';
 import { useInput } from '../hooks/useInput';
 import { Physics, RapierCollider, RigidBody, useRapier } from '@react-three/rapier';
-import { useBox, useConvexPolyhedron, useSpring } from '@react-three/cannon';
 import { Geometry } from "three-stdlib";
 import { lerp } from 'three/src/math/MathUtils';
 import { SwampModel } from './Swamp_location';
 import { Arrow } from './Arrow';
-import { PlaneBufferGeometry } from 'three';
-import { MeshStandardMaterial } from 'three';
 import { Enemy } from './Enemy';
 import Target from './Target';
 import { AimTarget } from './AimTarget';
@@ -86,26 +83,20 @@ export function Model({action, position}) {
   const model = useGLTF('/ErikaArcherWithAimingAnimationsNew.glb');
   const arrowModel = useGLTF("/arrow.glb")
   const { actions } = useAnimations(model.animations, model.scene)
-  const { mixer } = useAnimations(model.animations)
   const previousAction = usePrevious(action);
   const camera = useThree(state => state.camera);
   const {scene} = useThree();
-  const { rapier, world, rigidBody} = useRapier();
-  const swampRaycaster = useMemo(() => new Raycaster(), [])
   const [arrows, setArrows] = useState([]);
-  const [ePos, setEPos] = useState({})
 
-  const targetModel = useGLTF("/target.glb")
+
+
 
   const api = useRef();
-  const ref = useRef({
-    timeToShoot: 0
-  });
+  const ref = useRef();
   const swampRef = useRef();
   const arrowRef = useRef();
   const raycast = useForwardRaycast(ref);
   const swampRaycast = useForwardRaycast(swampRef);
-  const arrowRaycast = useArrowRaycast(arrowRef);
   let enemyPosition = new THREE.Vector3();
   let cameraDirection = new Vector3();
       
@@ -134,20 +125,12 @@ export function Model({action, position}) {
   let rotateAngle = new THREE.Vector3(0, 1, 0);
   let rotateQuarternion = new THREE.Quaternion();
   let cameraTarget = new THREE.Vector3();
-  const speed = new THREE.Vector3();
-  const SPEED = 5;
-  const SwampModelRef = useRef();
-  const down = new THREE.Vector3(0, -1, 0);
-  const raycaster = new THREE.Raycaster();
   let storedFall = 0;
   
 
   
   useEffect(() => {
-
-   setEPos(enemyPosition);
-   console.log(enemyPosition)
-    
+  
     if(previousAction){
       // actions[previousAction].stop()
     }
@@ -181,10 +164,6 @@ export function Model({action, position}) {
       nextActionToPlay?.reset().fadeIn().play();
       currentAction.current = action;
     }
-
-    
-    // actions[action].play();
-    // nodes.Armature.position.x;
 
     }, [action, actions, forward, backward, left, right, jump, shift, shoot]);
 
@@ -237,9 +216,7 @@ export function Model({action, position}) {
       const translation = api.current.translation();
       if (translation.y < -1) {
         // don't fall below ground
-            // model.scene.position.x = 0;
-            // model.scene.position.y = 10; 
-            // model.scene.position.z =  0;
+
             translation.x = 0;
             translation.y = 10; 
             translation.z =  0;
@@ -308,11 +285,7 @@ export function Model({action, position}) {
           ]);
         }
       }
-      // const arrowIntersections = arrowRaycast();
-      // // console.log(arrowModel.nodes.hanzo_arrow_LP__0.geometry)
-      // if(arrowIntersections.length > 0){
-      //   console.log("HIT");
-      // }
+     
       
     });
 
@@ -335,18 +308,6 @@ export function Model({action, position}) {
               key={model.scene.uuid} 
               position={[-0.2, 3.05, 32]}/> 
             </RigidBody>
-            {/* <RigidBody type="fixed" colliders="trimesh" rotation={[-Math.PI / 2, 0, 0]}>
-              <primitive object={swampModel.scene} ref={SwampModelRef} />
-            </RigidBody> */}
-            {/* <RigidBody colliders="trimesh" type="fixed" rotation={[-Math.PI / 2, 0, 0]}>
-              <mesh geometry={nodes.Object_2.geometry} material={materials.map_1blinn6SG}/>
-              <mesh geometry={nodes.Object_3.geometry} material={materials.map_1lambert4SG} ref={swampRef} name="MapGround"/>
-              <mesh geometry={nodes.Object_4.geometry} material={materials.map_1object}/>
-              <mesh geometry={nodes.Object_5.geometry} material={materials.map_1object}  name="MapGeometry"/>
-              <mesh geometry={nodes.Object_6.geometry} material={materials.map_1lambert5SG}/> 
-            </RigidBody> */}
-            {/* <ShootController/> */}
-            {/* <Arrows/> */}
           
           </group>
             
@@ -373,99 +334,11 @@ export function Model({action, position}) {
           })}
 
           {/* <Enemy position={enemyPosition}/> */}
-          <Target position={cameraDirection}/>
-          {/* {arrows.map(({key, ...props}) => {
-            <RigidBody>
-              <Arrow key={key} {...props}/>
-            </RigidBody>
-          })} */}
-
-            
-            
-
-
-  {/* <OrbitControls ref={controlsRef}/>
-    <group ref={group} dispose={null}>
-         <group name="Scene">
-           <group name="Armature" rotation={[Math.PI / 2, 0, 0]} scale={0.01}>
-            <primitive object={model.nodes.mixamorigHips} />
-            <skinnedMesh name="Erika_Archer_Arrow_Mesh"
-            geometry={model.nodes.Erika_Archer_Arrow_Mesh.geometry}
-            material={model.materials.Akai_MAT1}
-            skeleton={model.nodes.Erika_Archer_Arrow_Mesh.skeleton}
-            />
-            <skinnedMesh name="Erika_Archer_Body_Mesh"
-            geometry={model.nodes.Erika_Archer_Body_Mesh.geometry}
-            material={model.materials.Bow_MAT}
-            skeleton={model.nodes.Erika_Archer_Body_Mesh.skeleton}
-            />
-            <skinnedMesh name="Erika_Archer_Bow_Mesh"
-            geometry={model.nodes.Erika_Archer_Bow_Mesh.geometry}
-            material={model.materials.EyeSpec_MAT1}
-            skeleton={model.nodes.Erika_Archer_Bow_Mesh.skeleton}
-            />
-            <skinnedMesh name="Erika_Archer_Clothes_Mesh"
-            geometry={model.nodes.Erika_Archer_Clothes_Mesh.geometry}
-            material={model.materials.phong1}
-            skeleton={model.nodes.Erika_Archer_Clothes_Mesh.skeleton}
-            />
-            <skinnedMesh name="Erika_Archer_Eyelashes_Mesh"
-            geometry={model.nodes.Erika_Archer_Eyelashes_Mesh.geometry}
-            material={model.materials.Body_MAT1}
-            skeleton={model.nodes.Erika_Archer_Eyelashes_Mesh.skeleton}
-            />
-            <skinnedMesh name="Erika_Archer_Eyes_Mesh"
-            geometry={model.nodes.Erika_Archer_Eyes_Mesh.geometry}
-            material={model.materials.Arrow_MAT}
-            skeleton={model.nodes.Erika_Archer_Eyes_Mesh.skeleton}
-            />
-          </group>
-        </group>
-    </group> */}
-
-
-
+          <Target/>
 
     </>
 
 
-    // <group ref={group} dispose={null}>
-    //     <group name="Scene">
-    //       <group name="Armature" rotation={[Math.PI / 2, 0, 0]} scale={0.01}>
-    //         <primitive object={nodes.mixamorigHips} />
-    //         <skinnedMesh name="Erika_Archer_Arrow_Mesh"
-    //         geometry={nodes.Erika_Archer_Arrow_Mesh.geometry}
-    //         material={materials.Akai_MAT1}
-    //         skeleton={nodes.Erika_Archer_Arrow_Mesh.skeleton}
-    //         />
-    //         <skinnedMesh name="Erika_Archer_Body_Mesh"
-    //         geometry={nodes.Erika_Archer_Body_Mesh.geometry}
-    //         material={materials.Bow_MAT}
-    //         skeleton={nodes.Erika_Archer_Body_Mesh.skeleton}
-    //         />
-    //         <skinnedMesh name="Erika_Archer_Bow_Mesh"
-    //         geometry={nodes.Erika_Archer_Bow_Mesh.geometry}
-    //         material={materials.EyeSpec_MAT1}
-    //         skeleton={nodes.Erika_Archer_Bow_Mesh.skeleton}
-    //         />
-    //         <skinnedMesh name="Erika_Archer_Clothes_Mesh"
-    //         geometry={nodes.Erika_Archer_Clothes_Mesh.geometry}
-    //         material={materials.phong1}
-    //         skeleton={nodes.Erika_Archer_Clothes_Mesh.skeleton}
-    //         />
-    //         <skinnedMesh name="Erika_Archer_Eyelashes_Mesh"
-    //         geometry={nodes.Erika_Archer_Eyelashes_Mesh.geometry}
-    //         material={materials.Body_MAT1}
-    //         skeleton={nodes.Erika_Archer_Eyelashes_Mesh.skeleton}
-    //         />
-    //         <skinnedMesh name="Erika_Archer_Eyes_Mesh"
-    //         geometry={nodes.Erika_Archer_Eyes_Mesh.geometry}
-    //         material={materials.Arrow_MAT}
-    //         skeleton={nodes.Erika_Archer_Eyes_Mesh.skeleton}
-    //         />
-    //       </group>
-    //     </group>
-    // </group>
   )
 }
 
