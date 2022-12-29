@@ -1,22 +1,42 @@
-import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useGLTF, useAnimations, PerspectiveCamera, OrbitControls, CycleRaycast , useHelper, PointerLockControls} from '@react-three/drei'
+import { render, useFrame } from 'react-three-fiber';
+import { RecoilRoot, useRecoilState } from "recoil";
+import { targetPositionState } from "../state/GameState";
 
 
-
-
-export const Target = ({position}) => {
-
+export const Target = () => {
+    const [targetPosition, setTargetPosition] = useRecoilState(targetPositionState);
+    // const distance = model.scene.position.distanceTo(player.position)
+    const [pos, setPos] = useState([]);
     const model = useGLTF("/target.glb")
+    const onClick = useCallback((e) => {
+        e.stopPropagation();
+        setTargetPosition(model.scene.position);
+        console.log(targetPosition)
+      }, [targetPosition]);
+
+      
+      
 
     useEffect(() => {
-        position = model.scene.position;
+        // setTargetPosition(model.scene.position);
+        
     }, [])
+    
+    useFrame((state, delta, mouse) => {
+        
+    })
+
 
     return (
-        <>
-            <primitive object={model.scene} position={[3.5, 0.45, 21]} rotation={[0,1,0]} scale={1.5}/>
-        </>
+        pos,
+            <>
+                <mesh onClick={onClick}>
+                    <primitive object={model.scene} position={[3.5, 0.45, 21]} rotation={[0,1,0]} scale={1.5}/>
+                </mesh>
+            </>
+            
     )
 }
 
-export default Target;

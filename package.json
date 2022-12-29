@@ -25,6 +25,7 @@
     "react-scripts": "5.0.1",
     "react-three-fiber": "^6.0.13",
     "react-three-third-person": "^0.4.6",
+    "recoil": "^0.7.6",
     "spring": "^0.0.0",
     "three": "^0.146.0",
     "three-quaternion-from-normal": "^1.0.0",

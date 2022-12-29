@@ -14,8 +14,12 @@ import { lerp } from 'three/src/math/MathUtils';
 import { SwampModel } from './Swamp_location';
 import { Arrow } from './Arrow';
 import { Enemy } from './Enemy';
-import Target from './Target';
+import {Target} from './Target';
 import { AimTarget } from './AimTarget';
+import { targetPositionState } from "../state/GameState";
+import { useRecoilState } from 'recoil';
+
+
 
 
 const directionOffset = ({forward, backward, left, right}) => {
@@ -59,6 +63,8 @@ const useForwardRaycast = (obj) => {
   }
 }
 
+
+
 const useArrowRaycast = (obj) => {
   const raycaster = useMemo(() => new Raycaster(), [])
   const pos = useMemo(() => new Vector3(), [])
@@ -74,7 +80,10 @@ const useArrowRaycast = (obj) => {
   }
 }
 
+
+
 export function Model({action, position}) {
+  const {pos} = Target();
 
   const group = useRef()
   const currentAction = useRef("");
@@ -87,7 +96,8 @@ export function Model({action, position}) {
   const camera = useThree(state => state.camera);
   const {scene} = useThree();
   const [arrows, setArrows] = useState([]);
-
+  const [targetPosition, setTargetPosition] = useRecoilState(targetPositionState);
+  const [arrowVisibility, setArrowVisibility] = useState(true);
 
 
 
@@ -99,12 +109,12 @@ export function Model({action, position}) {
   const swampRaycast = useForwardRaycast(swampRef);
   let enemyPosition = new THREE.Vector3();
   let cameraDirection = new Vector3();
-      
- 
+  
 
   const arrowSpeed = 80;
   const arrowCoolDown = 300;
   let timeToShoot = 0;
+ 
 
   const updateCameraTarget = (moveX, moveZ) => {
     // move camera
@@ -130,7 +140,7 @@ export function Model({action, position}) {
 
   
   useEffect(() => {
-  
+    
     if(previousAction){
       // actions[previousAction].stop()
     }
@@ -156,7 +166,6 @@ export function Model({action, position}) {
       action = "Idle";
 
     } 
-
     if(currentAction.current != action){
       const nextActionToPlay = actions[action];
       const current = actions[currentAction.current];
@@ -165,7 +174,18 @@ export function Model({action, position}) {
       currentAction.current = action;
     }
 
-    }, [action, actions, forward, backward, left, right, jump, shift, shoot]);
+    //hide object from scene when it reaches target
+    // const distance = model.scene.position.distanceTo(targetPosition);
+    // if(distance < 0.1){
+    //  setArrowVisibility(false);
+     
+    // }
+    // else{
+    //   setArrowVisibility(true);
+      
+    // }
+
+    }, [action, actions, forward, backward, left, right, jump, shift, shoot, arrowVisibility]);
 
 
     useFrame((state, delta, mouse) => {
@@ -177,8 +197,9 @@ export function Model({action, position}) {
           camera.position.x - model.scene.position.x,
           camera.position.z - model.scene.position.z
         )
+        console.log(targetPosition)
         // console.log(actions)
-
+        
         //diagonal movement angle offset
         let newDirectionOffset = directionOffset({
           forward,
@@ -186,7 +207,7 @@ export function Model({action, position}) {
           left,
           right,
         });
-
+        
         rotateQuarternion.setFromAxisAngle(
           rotateAngle,
           angleYCameraDirection + newDirectionOffset
@@ -256,21 +277,35 @@ export function Model({action, position}) {
       
 
       camera.getWorldDirection(cameraDirection);
+      
+      let direction = new THREE.Vector3();
+      direction.subVectors(targetPosition, arrowModel.scene.position).normalize();
+      
+      // let lookAt = arrowModel.scene.lookAt(direction);
 
       //Shooting
-      const arrowDirectionX = cameraDirection.x * arrowSpeed * delta;
-      const arrowDirectionY = cameraDirection.y * arrowSpeed * delta;
-      const arrowDirectionZ = cameraDirection.z * arrowSpeed * delta;
+      // const arrowDirectionX = cameraDirection.x * arrowSpeed * delta;
+      // const arrowDirectionY = cameraDirection.y * arrowSpeed * delta;
+      // const arrowDirectionZ = cameraDirection.z * arrowSpeed * delta;
 
-      arrowModel.scene.position.x += arrowDirectionX
-      arrowModel.scene.position.y += arrowDirectionY
-      arrowModel.scene.position.z += arrowDirectionZ
+      // const arrowDirectionX = direction.x
+      // const arrowDirectionY = direction.y 
+      // const arrowDirectionZ = direction.z 
+
+      // arrowModel.scene.position.x += arrowDirectionX
+      // arrowModel.scene.position.y += arrowDirectionY
+      // arrowModel.scene.position.z += arrowDirectionZ
+
+      arrowModel.scene.position.x += direction.x 
+      arrowModel.scene.position.y += direction.y 
+      arrowModel.scene.position.z += direction.z 
+      
 
       const arrowPosition = model.scene.position.clone()
-      .add(cameraDirection.clone().multiplyScalar(2))
+      // .add(direction.clone().multiplyScalar(2))
+      
 
       if(currentAction.current === "StandingDrawArrow") {
-        
         const now = Date.now();
         if (now >= timeToShoot) {
           timeToShoot = now + arrowCoolDown;
@@ -279,12 +314,15 @@ export function Model({action, position}) {
             {
               id: now,
               position: [arrowPosition.x, arrowPosition.y+1.5, arrowPosition.z],
-              rotation: [cameraDirection.x+5, cameraDirection.y+5, cameraDirection.z+5]
+              rotation: [model.scene.position.x, model.scene.position.y, model.scene.position.z]
               // forward: [arrowModel.scene.position.x += arrowDirectionX, arrowModel.scene.position.y += arrowDirectionY, arrowModel.scene.position.z += arrowDirectionZ]
             }
           ]);
         }
       }
+
+      
+      
      
       
     });
@@ -313,28 +351,34 @@ export function Model({action, position}) {
             
           {arrows.map((arrow) => {
               return (
-                <RigidBody type="kinematicPosition" colliders="trimesh" >
+                <RigidBody >
                   {/* <Arrow 
                     rotation={[0, 5 ,0]} 
                     position={arrow.position} 
                     // velocity={arrow.forward}
                     key={`${arrow.id}`}
                   /> */}
-                  <primitive 
-                  visible={!shoot}
-                  object={arrowModel.scene} 
-                  ref={arrowRef} 
-                  position={arrow.position} 
-                  key={`${arrow.id}`} 
-                  scale={0.010}
-                  rotation={arrow.rotation}
-                  />
+                  <mesh visible={arrowVisibility ? true : false} >
+                    <primitive 
+                    visible={!shoot}
+                    object={arrowModel.scene} 
+                    ref={arrowRef} 
+                    position={arrow.position} 
+                    key={`${arrow.id}`} 
+                    scale={0.010}
+                    rotation={arrow.rotation}
+                    transparent={true}
+                    // visible={arrowVisibility}
+                    />
+                  </mesh>
+                  
                 </RigidBody>
               );
           })}
 
-          {/* <Enemy position={enemyPosition}/> */}
+          {/* <Enemy player={model.scene}/> */}
           <Target/>
+           
 
     </>
 

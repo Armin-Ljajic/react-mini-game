@@ -74,7 +74,7 @@ const useForwardRaycast = (mouse, camera) => {
   }
   
 
-export const Enemy= ({position}) => {
+export const Enemy= ({position, player}) => {
 
     const model = useGLTF('/Enemy.glb')
     const {actions} = useAnimations(model.animations, model.scene);
@@ -92,6 +92,11 @@ export const Enemy= ({position}) => {
     const [selected, setSelected] = useState([])
     const [enemyPosition, setEnemyPosition] = useState([]);
 
+    const [health, setHealth] = useState(100);
+
+    const ENEMY_SPEED = 0.5; // enemy movement speed
+    const ENEMY_DETECTION_RANGE = 10; // distance at which enemy will start chasing player
+    const ENEMY_ATTACK_RANGE = 5; // distance at which enemy will attack player
 
     const arrowHelper = new THREE.ArrowHelper(
         new THREE.Vector3(),
@@ -108,10 +113,6 @@ export const Enemy= ({position}) => {
 
     useEffect(() => {
 
-      setEnemyPosition(model.scene.position)
-      position = enemyPosition;
-      console.log(position)
-      console.log(model.scene.position)
 
       let action = "Idle";
         const playIdle = actions[action];
@@ -158,42 +159,56 @@ export const Enemy= ({position}) => {
         walkDirection.y = 0;
         walkDirection.normalize();
         // walkDirection.applyAxisAngle(rotateAngle, newDirectionOffset)
-
-        model.nodes.MAW.geometry.boundingBox.min.x += 5;
-        model.nodes.MAW.geometry.boundingBox.min.y += 5;
-        model.nodes.MAW.geometry.boundingBox.min.z += 5;
-
-        model.nodes.MAW.geometry.boundingBox.max.x += 5;
-        model.nodes.MAW.geometry.boundingBox.max.y += 5;
-        model.nodes.MAW.geometry.boundingBox.max.z += 5;
-        console.log(model.scene.position)
         // console.log(model.nodes.MAW)
 
         // console.log(selected)
         const intersections = raycaster();
         // targetRef.current.rotation.x = clock.getElapsedTime()
         
+        const distance = model.scene.position.distanceTo(player.position);
+        
 
-        // const translation = api.current.translation();
-        // if (translation.y < -1) {
-        //       translation.x = 0;
-        //       translation.y = 10; 
-        //       translation.z =  0;
-        //   }
+    // if player is within enemy detection range, start chasing
+        if (distance <= ENEMY_DETECTION_RANGE) {
+          // move towards player
+          const direction = new THREE.Vector3().subVectors(player.position, model.scene.position).normalize();
+          model.scene.position.add(direction.multiplyScalar(ENEMY_SPEED));
+        }
 
-        //   walkDirection.y += (storedFall, -9.81 * delta, 0.10)
-        //   storedFall = walkDirection.y
+        // if player is within enemy attack range, attack
+        if (distance <= ENEMY_ATTACK_RANGE) {
+          setHealth(health - 1); // decrease enemy health by 1
+        }
+      
+      
+        const translation = api.current.translation();
+        if (translation.y < -1) {
+              translation.x = 0;
+              translation.y = 10; 
+              translation.z =  0;
+          }
 
-        //   if(intersections.length > 0){
-        //     model.scene.position.copy(intersections[0].point)
-        //     const point = intersections[0].point;
-        //     let diff = model.scene.position.y - (point.y + 0.28);
-        //     if(diff < 0.0){
-        //         storedFall = 0;
-        //         walkDirection.y += lerp(0, Math.abs(diff), 0.5);
-        //         // console.log(point);
-        //       }
-        //   }
+          walkDirection.y += (storedFall, -9.81 * delta, 0.10)
+          storedFall = walkDirection.y
+
+          if(intersections.length > 0){
+            model.scene.position.copy(intersections[0].point)
+            const point = intersections[0].point;
+            let diff = model.scene.position.y - (point.y + 0.28);
+            if(diff < 0.0){
+                storedFall = 0;
+                walkDirection.y += lerp(0, Math.abs(diff), 0.5);
+                // console.log(point);
+              }
+          }
+
+          const moveX = walkDirection.x * ENEMY_SPEED * delta;
+          const moveZ = walkDirection.z * ENEMY_SPEED * delta;
+        
+        
+          translation.x = model.scene.position.x += moveX;
+          translation.y = model.scene.position.y += walkDirection.y
+          translation.z = model.scene.position.z += moveZ;
     })
 
     return (
@@ -201,14 +216,16 @@ export const Enemy= ({position}) => {
         <Suspense fallback={null}>
             <group >
                 <mesh >
-                <group position={[2.5, 0.5, 20]}>
+                <group>
+                  <mesh position={model.scene.position}>
                     <RigidBody colliders="cuboid" type="kinematicPosition" ref={api}>
-                        <primitive 
-                        object={model.scene} 
-                        ref={ref} 
-                        onClick={(e) => console.log("clicked", e.target) }
-                        />
-                    </RigidBody>
+                          <primitive 
+                          object={model.scene} 
+                          ref={ref} 
+                          onClick={(e) => console.log("clicked", e.target) }
+                          />
+                      </RigidBody>
+                  </mesh>
                     <mesh ref={targetRef}>
                         <Marker rotation={[0, Math.PI / 1, Math.PI / 1]} position={[0, 3, 0]} >
                             {/* <div style={{ position: 'absolute', fontSize: 10, letterSpacing: -0.5, left: 17.5 }}>north</div> */}
