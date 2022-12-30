@@ -284,25 +284,25 @@ export function Model({action, position}) {
       // let lookAt = arrowModel.scene.lookAt(direction);
 
       //Shooting
-      // const arrowDirectionX = cameraDirection.x * arrowSpeed * delta;
-      // const arrowDirectionY = cameraDirection.y * arrowSpeed * delta;
-      // const arrowDirectionZ = cameraDirection.z * arrowSpeed * delta;
+      const arrowDirectionX = cameraDirection.x * arrowSpeed * delta;
+      const arrowDirectionY = cameraDirection.y * arrowSpeed * delta;
+      const arrowDirectionZ = cameraDirection.z * arrowSpeed * delta;
 
       // const arrowDirectionX = direction.x
       // const arrowDirectionY = direction.y 
       // const arrowDirectionZ = direction.z 
 
-      // arrowModel.scene.position.x += arrowDirectionX
-      // arrowModel.scene.position.y += arrowDirectionY
-      // arrowModel.scene.position.z += arrowDirectionZ
+      arrowModel.scene.position.x += arrowDirectionX
+      arrowModel.scene.position.y += arrowDirectionY
+      arrowModel.scene.position.z += arrowDirectionZ
 
-      arrowModel.scene.position.x += direction.x 
-      arrowModel.scene.position.y += direction.y 
-      arrowModel.scene.position.z += direction.z 
+      // arrowModel.scene.position.x += direction.x 
+      // arrowModel.scene.position.y += direction.y 
+      // arrowModel.scene.position.z += direction.z 
       
 
       const arrowPosition = model.scene.position.clone()
-      // .add(direction.clone().multiplyScalar(2))
+      .add(cameraDirection.clone().multiplyScalar(2))
       
 
       if(currentAction.current === "StandingDrawArrow") {
@@ -351,7 +351,7 @@ export function Model({action, position}) {
             
           {arrows.map((arrow) => {
               return (
-                <RigidBody >
+                <RigidBody type="kinematicPosition" collider="cuboid">
                   {/* <Arrow 
                     rotation={[0, 5 ,0]} 
                     position={arrow.position} 
@@ -377,7 +377,9 @@ export function Model({action, position}) {
           })}
 
           {/* <Enemy player={model.scene}/> */}
-          <Target/>
+          <RigidBody type="fixed" colliders="ball">
+            <Target/>
+          </RigidBody>
            
 
     </>
