@@ -3,6 +3,7 @@ import { useGLTF, useAnimations, PerspectiveCamera, OrbitControls, CycleRaycast 
 import { render, useFrame } from 'react-three-fiber';
 import { RecoilRoot, useRecoilState } from "recoil";
 import { targetPositionState } from "../state/GameState";
+import { RigidBody } from '@react-three/rapier';
 
 
 export const Target = () => {
@@ -14,6 +15,7 @@ export const Target = () => {
         e.stopPropagation();
         setTargetPosition(model.scene.position);
         console.log(targetPosition)
+        console.log(model.nodes.Sun)
       }, [targetPosition]);
 
       
@@ -32,9 +34,11 @@ export const Target = () => {
     return (
         pos,
             <>
+            <RigidBody type='fixed'>
                 <mesh onClick={onClick}>
                     <primitive object={model.scene} position={[3.5, 0.45, 21]} rotation={[0,1,0]} scale={1.5}/>
                 </mesh>
+            </RigidBody>
             </>
             
     )

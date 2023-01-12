@@ -16,8 +16,9 @@ import { Arrow } from './Arrow';
 import { Enemy } from './Enemy';
 import {Target} from './Target';
 import { AimTarget } from './AimTarget';
-import { targetPositionState } from "../state/GameState";
+import { archerPositionState, targetPositionState } from "../state/GameState";
 import { useRecoilState } from 'recoil';
+import { TextureLoader } from "three";
 
 
 
@@ -84,7 +85,7 @@ const useArrowRaycast = (obj) => {
 
 export function Model({action, position}) {
   const {pos} = Target();
-
+  const controls = useRef();
   const group = useRef()
   const currentAction = useRef("");
   const controlsRef = useRef(OrbitControls);
@@ -94,12 +95,22 @@ export function Model({action, position}) {
   const { actions } = useAnimations(model.animations, model.scene)
   const previousAction = usePrevious(action);
   const camera = useThree(state => state.camera);
+  const gl = useThree();
   const {scene} = useThree();
   const [arrows, setArrows] = useState([]);
   const [targetPosition, setTargetPosition] = useRecoilState(targetPositionState);
+  const [modelPosition, setModelPosition] = useRecoilState(archerPositionState);
   const [arrowVisibility, setArrowVisibility] = useState(true);
+  var ray = new THREE.Raycaster();
 
-
+  const rearTarget = useRef();
+    const frontTarget = useRef();
+  
+    // const loader = new TextureLoader();
+    // A png with transparency to use as the target sprite.
+    const loader = new TextureLoader();
+    // A png with transparency to use as the target sprite.
+    const texture = loader.load("/textures/aimTarget.png");
 
   const api = useRef();
   const ref = useRef();
@@ -111,7 +122,7 @@ export function Model({action, position}) {
   let cameraDirection = new Vector3();
   
 
-  const arrowSpeed = 80;
+  const arrowSpeed = 30;
   const arrowCoolDown = 300;
   let timeToShoot = 0;
  
@@ -174,6 +185,7 @@ export function Model({action, position}) {
       currentAction.current = action;
     }
 
+    
     //hide object from scene when it reaches target
     // const distance = model.scene.position.distanceTo(targetPosition);
     // if(distance < 0.1){
@@ -188,7 +200,7 @@ export function Model({action, position}) {
     }, [action, actions, forward, backward, left, right, jump, shift, shoot, arrowVisibility]);
 
 
-    useFrame((state, delta, mouse) => {
+    useFrame(({state, delta, mouse}) => {
       if(currentAction.current === "WalkForward" ||
       currentAction.current === "RunForward"
       ) {
@@ -197,7 +209,6 @@ export function Model({action, position}) {
           camera.position.x - model.scene.position.x,
           camera.position.z - model.scene.position.z
         )
-        console.log(targetPosition)
         // console.log(actions)
         
         //diagonal movement angle offset
@@ -229,7 +240,6 @@ export function Model({action, position}) {
         const intersections = raycast();
         const swampIntersections = swampRaycast();
         
-        
         const walkable = scene.children.filter(
           (o) => o.children[0]?.uuid !== ref?.current?.uuid
         );
@@ -249,7 +259,7 @@ export function Model({action, position}) {
         
         if(intersections.length > 0){
           model.scene.position.copy(intersections[0].point)
-          const point = intersections[0].point;
+          let point = intersections[0].point;
           let diff = model.scene.position.y - (point.y + 0.28);
           if(diff < 0.0){
             storedFall = 0;
@@ -273,9 +283,10 @@ export function Model({action, position}) {
        
         
       };
-
+      // rearTarget.current.position.x = -mouse.x *30;
+      // rearTarget.current.position.y = -mouse.y *10;
+      // ray.setFromCamera(mouse, camera);
       
-
       camera.getWorldDirection(cameraDirection);
       
       let direction = new THREE.Vector3();
@@ -314,14 +325,14 @@ export function Model({action, position}) {
             {
               id: now,
               position: [arrowPosition.x, arrowPosition.y+1.5, arrowPosition.z],
-              rotation: [model.scene.position.x, model.scene.position.y, model.scene.position.z]
+              rotation: [direction.x, direction.y, direction.z]
               // forward: [arrowModel.scene.position.x += arrowDirectionX, arrowModel.scene.position.y += arrowDirectionY, arrowModel.scene.position.z += arrowDirectionZ]
             }
           ]);
         }
       }
 
-      
+      setModelPosition(model.scene.position);
       
      
       
@@ -330,12 +341,15 @@ export function Model({action, position}) {
     return (
     <>
           
+            {/* <PointerLockControls  ref={controlsRef} position={model.scene.position}/> */}
+          
           <OrbitControls 
           ref={controlsRef} 
-          target={model.scene.position} 
+          position={model.scene.position} 
           minPolarAngle={0} 
           maxPolarAngle={Math.PI / 2}
           maxDistance={100}
+
           />
           {/* <AimTarget position={camera.position}/> */}
           <group>
@@ -346,7 +360,8 @@ export function Model({action, position}) {
               key={model.scene.uuid} 
               position={[-0.2, 3.05, 32]}/> 
             </RigidBody>
-          
+            
+            {/* <AimTarget/> */}
           </group>
             
           {arrows.map((arrow) => {
@@ -369,6 +384,7 @@ export function Model({action, position}) {
                     rotation={arrow.rotation}
                     transparent={true}
                     // visible={arrowVisibility}
+                    angularVelocity
                     />
                   </mesh>
                   
