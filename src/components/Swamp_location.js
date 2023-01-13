@@ -31,54 +31,6 @@ export function SwampModel(props) {
     return texture;
 }
 
-
-
-
-// const texture = useTexture(materials.map_1lambert4SG.map.image);
-// var pixels = getPixels(materials.map_1lambert4SG.map.image);
-const heights = [];
-const { rapier, world } = useRapier();
-
-
-
-const w = materials.map_1lambert4SG.map.image.width;
-const h = materials.map_1lambert4SG.map.image.height;
-
-
-console.log(materials.map_1lambert4SG.map)
-// const geo = useMemo(() => {
-//   for (var i = 0; i < w * h * 4; i += 4)
-//     heights.push((pixels[i] / 255));
-
-//   // create physics collider - should be replaced with HeightfieldCollider
-//   let rigidBody = world.createRigidBody(rapier.RigidBodyDesc.fixed());
-//   let colliderDesc = rapier.ColliderDesc.heightfield(
-//     w - 1,
-//     h - 1,
-//     new Float32Array(heights),
-//     { x: w , y: 1.0, z: h }
-//   );
-//   world.createCollider(colliderDesc, rigidBody);
-
-//   // create mesh
-//   // initially tried using displacment but shader and height field hieght values were differnt
-//   // also order of heightfield and geo are slightly differnt, def a way to do this simpler
-//   const geo = new PlaneGeometry(w, h, w - 1, h - 1);
-//   const f = chunk(heights, w).reverse().flat();
-//   const vertices = geo.attributes.position.array;
-//   for (var i = 0; i < vertices.length; i++) vertices[i * 3 + 2] = f[i];
-//   return geo;
-// }, [materials.map_1lambert4SG.map]);
-
-// function chunk(arr, size) {
-//   return arr.reduce(
-//     (acc, e, i) => (
-//       i % size ? acc[acc.length - 1].push(e) : acc.push([e]), acc
-//     ),
-//     []
-//   );
-// }
-
 const GroundFloor = () => {
   const arrayOfVerts = nodes.Object_3.geometry.attributes.position.array;
   const vertices = useMemo(() => arrayOfVerts.map(point => new THREE.Vector3(point)), [arrayOfVerts])

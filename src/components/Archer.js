@@ -57,6 +57,20 @@ const useForwardRaycast = (obj) => {
   }
 }
 
+const useForwardRaycastArrow = (obj) => {
+  const raycaster = useMemo(() => new Raycaster(), [])
+  const pos = useMemo(() => new Vector3(), [])
+  const dir = useMemo(() => new Vector3(), [])
+  const scene = useThree((state) => state.scene)
+  
+  return () => {
+    if (!obj.current) return []
+    raycaster.set(obj.current.getWorldPosition(pos), obj.current.getWorldDirection(dir))
+    // raycaster.set(obj.current.getWorldPosition(pos), dir)
+    return raycaster.intersectObjects(scene.children)
+  }
+}
+
 
 
 
@@ -84,7 +98,7 @@ export function Model({action, position}) {
   const swampRef = useRef();
   const arrowRef = useRef();
   const raycast = useForwardRaycast(ref);
-  const swampRaycast = useForwardRaycast(swampRef);
+  const arrowRaycast = useForwardRaycastArrow(arrowRef);
   let enemyPosition = new THREE.Vector3();
   const sphere = [];
  
@@ -115,7 +129,9 @@ export function Model({action, position}) {
   let rotateQuarternion = new THREE.Quaternion();
   let cameraTarget = new THREE.Vector3();
   let storedFall = 0;
-  
+  const pos2 =  new Vector3()
+  let dir2 =  new Vector3()
+  const arrowRaycaster = new THREE.Raycaster();
 
   
   useEffect(() => {
@@ -136,7 +152,6 @@ export function Model({action, position}) {
         }
       ]);
     }
-    console.log(arrowRef.current);
     // console.log(arrows)
     if(previousAction){
       // actions[previousAction].stop()
@@ -228,7 +243,8 @@ export function Model({action, position}) {
 
         //intersections
         const intersections = raycast();
-      
+        
+        
         
         
         const walkable = scene.children.filter(
@@ -284,9 +300,11 @@ export function Model({action, position}) {
       // let lookAt = arrowModel.scene.lookAt(direction);
 
       //Shooting
-      const arrowDirectionX = bulletDirection.x * arrowSpeed * delta;
-      const arrowDirectionY = bulletDirection.y * arrowSpeed * delta;
-      const arrowDirectionZ = bulletDirection.z * arrowSpeed * delta;
+      const arrowDirectionX = cameraDirection.x * arrowSpeed * 20 * delta;
+      const arrowDirectionY = cameraDirection.y * arrowSpeed * 20 * delta;
+      const arrowDirectionZ = cameraDirection.z * arrowSpeed * 20 * delta;
+
+      
 
       // const arrowDirectionX = direction.x
       // const arrowDirectionY = direction.y 
@@ -298,7 +316,9 @@ export function Model({action, position}) {
       
       
      
-      
+      arrowRef.current.position.x += arrowDirectionX 
+      arrowRef.current.position.y += arrowDirectionY
+      arrowRef.current.position.z += arrowDirectionZ 
      
       
       const arrowPosition = model.scene.position.clone()
@@ -307,9 +327,7 @@ export function Model({action, position}) {
       
 
      
-      arrowRef.current.position.x += arrowDirectionX 
-      arrowRef.current.position.y += arrowDirectionY
-      arrowRef.current.position.z += arrowDirectionZ 
+      
      
 
       if(currentAction.current === "StandingDrawArrow") {
@@ -326,15 +344,30 @@ export function Model({action, position}) {
           ].slice(1));
           
         }
-        console.log(arrowPosition)
-        console.log(bulletDirection)
+        
          
       }
 
       
+      // var dir = arrowRef.current.getWorldDirection(dir2);
+      // var pos = arrowRef.current.getWorldPosition(pos2)
+
+      // arrowRaycaster.set(arrowPosition, arrowRef.current.position);
+      // console.log(arrowPosition, arrowRef.current.position)
+      // console.log("pos",pos, "dir", dir2)
+      var intersects = arrowRaycast();
+      // var intersects = arrowRaycaster.intersectObjects(scene.children);
+
       
-     
+        if(intersects.length > 0 ){
+            // setArrowVisibility(false);
+            console.log(intersects[0].object.name)
+        }
       
+      // else{
+      //     setArrowVisibility(true);
+      // }
+
     });
 
     
@@ -387,7 +420,7 @@ export function Model({action, position}) {
                     />
                   </mesh> */}
                    
-                  <mesh visible={!shoot} >
+                  <mesh visible={shoot == false}>
                   <Trail
                     width={2} // Width of the line
                     length={10}
@@ -396,11 +429,10 @@ export function Model({action, position}) {
                     attenuation={(x) => { return  x * x}} // A function to define the width in each point along it.
                     target={arrowRef}
                     >
-                      {sphere && 
-                      <Sphere args={[0.05, 64]} position={arrow.position} ref={arrowRef} >
-                        <meshBasicMaterial color="white"/>
-                      </Sphere>
-                       }
+                        <Sphere args={[0.5, 64]} position={arrow.position} ref={arrowRef} >
+                          <meshBasicMaterial color="white"/>
+                        </Sphere>
+                       
                   </Trail>
                   </mesh>
                   

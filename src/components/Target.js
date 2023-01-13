@@ -3,6 +3,7 @@ import { useGLTF, useAnimations, PerspectiveCamera, OrbitControls, CycleRaycast 
 import { render, useFrame } from 'react-three-fiber';
 import { RecoilRoot, useRecoilState } from "recoil";
 import { targetPositionState } from "../state/GameState";
+import { RigidBody } from '@react-three/rapier';
 
 
 export const Target = () => {
@@ -33,9 +34,13 @@ export const Target = () => {
         pos,
             <>
             <group>
-                <mesh onClick={onClick}>
-                    <primitive object={model.scene} position={[3.5, 0.45, 21]} rotation={[0,1,0]} scale={1.5} name="target"/>
-                </mesh>
+                <RigidBody>
+                    
+                </RigidBody>
+                    <mesh onClick={onClick}>
+                        <primitive object={model.scene} position={[3.5, 0.45, 21]} rotation={[0,1,0]} scale={1.5} name="target"/>
+                    </mesh>
+
             </group>
             </>
             
