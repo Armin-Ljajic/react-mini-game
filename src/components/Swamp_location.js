@@ -102,11 +102,11 @@ const GroundFloor = () => {
       <group {...props} dispose={null}>
         <group> 
             <RigidBody colliders="trimesh" type="fixed" rotation={[-Math.PI / 2, 0, 0]}>
-              <mesh geometry={nodes.Object_2.geometry} material={materials.map_1blinn6SG} />
-              <mesh geometry={nodes.Object_3.geometry} material={materials.map_1lambert4SG}/>
-              <mesh geometry={nodes.Object_4.geometry} material={materials.map_1object}/>
-              <mesh geometry={nodes.Object_5.geometry} material={materials.map_1object} />
-              <mesh geometry={nodes.Object_6.geometry} material={materials.map_1lambert5SG} /> 
+              <mesh geometry={nodes.Object_2.geometry} material={materials.map_1blinn6SG} name="obj1"/>
+              <mesh geometry={nodes.Object_3.geometry} material={materials.map_1lambert4SG} name="obj2"/>
+              <mesh geometry={nodes.Object_4.geometry} material={materials.map_1object} name="obj3"/>
+              <mesh geometry={nodes.Object_5.geometry} material={materials.map_1object} name="obj4" />
+              <mesh geometry={nodes.Object_6.geometry} material={materials.map_1lambert5SG} name="obj5" /> 
             </RigidBody>
         </group>
       </group>

@@ -14,6 +14,8 @@ import HealthBar from "./HealthBar.jsx";
 import { useEffect } from "react";
 import {Enemy} from '../components/Enemy'
 import { AimTarget } from "./AimTarget.js";
+import Crosshair from "./Crosshair.jsx";
+import { Target } from "./Target.js";
 
 
 
@@ -123,7 +125,7 @@ return (
         camera={{
           fov: 50,
           near: 0.1,
-          far: 1000,
+          far: 500,
           position: [-0.2, 12, 45],
           
         }}
@@ -140,8 +142,10 @@ return (
           floatIntensity={0.6}> */}
              {/* <Plane rotation={[-Math.PI / 2, 0, 0]} userData={{ id: "floor" }} /> */}
              {debug && <Debug/>}
+                <Target/>
                 <SwampModel/>
                 <Model/>
+                 
                 
              {/* <SceneParticles/> */}
              <CuboidCollider castShadow args={[25, 10, 0.2]} position={[0, 5, 38]} name="Wall" />
@@ -191,6 +195,7 @@ return (
           </Physics>
           </Suspense>
           <Lighting />
+          <Crosshair/>
           </Canvas>
       </div>
   

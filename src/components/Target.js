@@ -32,9 +32,11 @@ export const Target = () => {
     return (
         pos,
             <>
+            <group>
                 <mesh onClick={onClick}>
-                    <primitive object={model.scene} position={[3.5, 0.45, 21]} rotation={[0,1,0]} scale={1.5}/>
+                    <primitive object={model.scene} position={[3.5, 0.45, 21]} rotation={[0,1,0]} scale={1.5} name="target"/>
                 </mesh>
+            </group>
             </>
             
     )
