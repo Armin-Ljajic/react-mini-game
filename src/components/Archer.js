@@ -228,7 +228,7 @@ export function Model({action, position}) {
 
         //intersections
         const intersections = raycast();
-        const swampIntersections = swampRaycast();
+      
         
         
         const walkable = scene.children.filter(

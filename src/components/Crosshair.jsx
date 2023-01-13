@@ -54,7 +54,7 @@ const Crosshair = () => {
         
         
 
-        if(intersects[0].object.name == "Circle001_0"){
+        if(intersects[0].object.name== "Circle001_0"){
             setColor("red")
             console.log(intersects[0].object.name)
         }
@@ -84,11 +84,11 @@ const Crosshair = () => {
     return (
         <group>
             <group ref={lines}>
-                {/* <Line start={[0.05,0,0]} end={[0.18,0,0]} />
+                <Line start={[0.05,0,0]} end={[0.18,0,0]} />
                 <Line start={[0,0.05,0]} end={[0,0.18,0]} />
                 <Line start={[-0.05,0,0]} end={[-0.18,0,0]} />
-                <Line start={[0,-0.05,0]} end={[0,-0.18,0]} /> */}
-s            </group>
+                <Line start={[0,-0.05,0]} end={[0,-0.18,0]} />
+           </group>
             <mesh ref={dot}>
                 <sphereGeometry args={[0.0004, 64, 32]}/>
                 <meshBasicMaterial color={color} />
