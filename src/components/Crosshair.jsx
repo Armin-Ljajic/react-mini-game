@@ -38,19 +38,21 @@ const Crosshair = () => {
     const {scene} = useThree();
     const [targetPosition, setTargetPosition] = useRecoilState(targetPositionState);
     const [color, setColor] = useState("")
-
+    
+    
+    const pos2 =  new Vector3()
+    const dir2 =  new Vector3()
+    
     useFrame(({mouse}) => {
         const vector = new Vector3(0, 0, 0).unproject(camera);
         dot.current.position.set(...vector.toArray());
-
-        const pos2 =  new Vector3()
-        const dir2 =  new Vector3()
         var dir = camera.getWorldDirection(dir2);
         var pos = camera.getWorldPosition(pos2)
-        raycast.set(pos, dir);
-        // console.log("pos",pos, "dir",dir)
-        var intersects = raycast.intersectObjects(scene.children);
 
+        raycast.set(pos, dir);
+        var intersects = raycast.intersecStObjects(scene.children);
+        
+        
 
         if(intersects[0].object.name == "Circle001_0"){
             setColor("red")
@@ -87,13 +89,13 @@ const Crosshair = () => {
                 <Line start={[-0.05,0,0]} end={[-0.18,0,0]} />
                 <Line start={[0,-0.05,0]} end={[0,-0.18,0]} /> */}
 s            </group>
-            {/* <mesh ref={dot}>
+            <mesh ref={dot}>
                 <sphereGeometry args={[0.0004, 64, 32]}/>
                 <meshBasicMaterial color={color} />
-            </mesh> */}
-                <Sphere position={[0, 0, -25]} args={[0.0004, 64, 32]} ref={dot}>
+            </mesh>
+                {/* <Sphere args={[0.0004, 64, 32]} ref={dot}>
                   <meshBasicMaterial color={color} />
-                </Sphere>
+                </Sphere> */}
         </group>
     )
 }
