@@ -50,7 +50,7 @@ const Crosshair = () => {
         var pos = camera.getWorldPosition(pos2)
 
         raycast.set(pos, dir);
-        var intersects = raycast.intersecStObjects(scene.children);
+        var intersects = raycast.intersectObjects(scene.children);
         
         
 
