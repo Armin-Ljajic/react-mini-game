@@ -76,7 +76,7 @@ const useForwardRaycastArrow = (obj) => {
 
 
 export function Model({action, position}) {
-  const {pos} = Target();
+  // const {pos} = Target();
 
   const group = useRef()
   const currentAction = useRef("");
@@ -90,31 +90,26 @@ export function Model({action, position}) {
   const {scene} = useThree();
   const [arrows, setArrows] = useState([{id: 0,position: [0, 0, 0]}]);
   const [targetPosition, setTargetPosition] = useRecoilState(targetPositionState);
-  const [arrowVisibility, setArrowVisibility] = useState(true);
-  const [playing, setPlaying] = useState(false);
+  const [arrowVisibility, setArrowVisibility] = useState(false);
+  const [release, setRelease] = useState(false);
 
 
   const api = useRef();
+  const arrowApi = useRef();
   const ref = useRef();
   const swampRef = useRef();
   const arrowRef = useRef();
   const raycast = useForwardRaycast(ref);
   const arrowRaycast = useForwardRaycastArrow(arrowRef);
-  let enemyPosition = new THREE.Vector3();
-  const sphere = [];
   
-  const options = {
-   duration: 2,
-    isPlaying: playing,
-    onComplete: () => ({shouldRepeat: true, delay: 0, newStartAt: 0}) 
-  }
+ 
+  
 
-  const { elapsedTime, reset } = useElapsedTime(options)
 
   const arrowSpeed = 80;
   const arrowCoolDown = 300;
   let timeToShoot = 0;
-  let timer = 0;
+
  
 
   const updateCameraTarget = (moveX, moveZ) => {
@@ -153,7 +148,7 @@ export function Model({action, position}) {
     //   setArrows((arrows) => [
     //     ...arrows,
     //     {
-    //       id: now,
+    //       id: 0,
     //       position: [0, 0, 0],
     //     }
     //   ]);
@@ -179,32 +174,33 @@ export function Model({action, position}) {
       action = "Jump";
 
     } else if(shoot){
-      const now = Date.now();
       action = "StandingDrawArrow";
-      // 1.0333333015441895
-      console.log(actions[action])
       actions[action].clampWhenFinished = true;
       actions[action].setLoop(THREE.LoopOnce, 1);
       actions[action].timeScale = 1;
-      // if (now >= timer) {
-      //   timer = now + arrowCoolDown
-      //   action = "StandingDrawArrowRelease"
-      //   actions[action].clampWhenFinished = true;
-      //   actions[action].setLoop(THREE.LoopOnce, 1);
-      //   actions[action].timeScale = 1;
+      setRelease(true);
+      
+     
+    } else if(shoot == false && release === true){
+      action = "StandingDrawArrowRelease";
+      actions[action].clampWhenFinished = true;
+      actions[action].setLoop(THREE.LoopOnce, 1);
+      actions[action].timeScale = 1;
+      setRelease(false);
+      
 
-      // }
 
     } else{
       action = "Idle";
-
     } 
+    
     if(currentAction.current != action){
       const nextActionToPlay = actions[action];
       const current = actions[currentAction.current];
       current?.fadeOut(0.2);
       nextActionToPlay?.reset().fadeIn().play();
       currentAction.current = action;
+    
     }
 
     //hide object from scene when it reaches target
@@ -221,8 +217,7 @@ export function Model({action, position}) {
     // arrowRef.current.position.x += arrowDirectionX 
     //   arrowRef.current.position.y += arrowDirectionY
     //   arrowRef.current.position.z += arrowDirectionZ 
-
-    }, [action, actions, forward, backward, left, right, jump, shift, shoot, arrowVisibility]);
+    }, [action, actions, forward, backward, left, right, jump, shift, shoot]);
 
 
     useFrame((state, delta, mouse, clock) => {
@@ -264,7 +259,6 @@ export function Model({action, position}) {
 
         //intersections
         const intersections = raycast();
-        
         
         
         
@@ -346,12 +340,12 @@ export function Model({action, position}) {
       .add(cameraDirection.clone().multiplyScalar(2))
 
       
-
+      
      
       
      
 
-      if(currentAction.current === "StandingDrawArrow") {
+      if(currentAction.current === "StandingDrawArrowRelease") {
         const now = Date.now();
         if (now >= timeToShoot) {
           timeToShoot = now + arrowCoolDown;
@@ -365,9 +359,13 @@ export function Model({action, position}) {
           ].slice(1));
           
         }
-        
-         
+       
+       
       }
+      console.log(currentAction.current)
+
+
+      
 
       
       // var dir = arrowRef.current.getWorldDirection(dir2);
@@ -378,11 +376,10 @@ export function Model({action, position}) {
       // console.log("pos",pos, "dir", dir2)
       var intersects = arrowRaycast();
       // var intersects = arrowRaycaster.intersectObjects(scene.children);
-
       
-        if(intersects.length > 0 ){
+        if(intersects.length > 0 && intersects[0].object.name == "Circle001_0"){
             // setArrowVisibility(false);
-            console.log(intersects[0].object.name)
+            console.log("hit")
         }
       
       // else{
@@ -416,7 +413,7 @@ export function Model({action, position}) {
           
           </group>
             
-          {arrows.map((arrow) => {
+          {arrows.map((arrow, idx) => {
               return (
                <>
 
@@ -440,22 +437,25 @@ export function Model({action, position}) {
                     
                     />
                   </mesh> */}
-                   
-                  <mesh visible={shoot == false}>
-                  <Trail
-                    width={2} // Width of the line
-                    length={10}
-                    color={'white'} // Color of the line
-                    decay={10}
-                    attenuation={(x) => { return  x * x}} // A function to define the width in each point along it.
-                    target={arrowRef}
-                    >
-                        <Sphere args={[1, 64]} position={arrow.position} ref={arrowRef} >
-                          <meshBasicMaterial color="white"/>
-                        </Sphere>
-                       
-                  </Trail>
-                  </mesh>
+                  
+                    <mesh visible={currentAction.current === "StandingDrawArrowRelease"}>
+                    <Trail
+                      width={2} // Width of the line
+                      length={10}
+                      color={'white'} // Color of the line
+                      decay={10}
+                      attenuation={(x) => { return  x * x}} // A function to define the width in each point along it.
+                      target={arrowRef}
+                      >
+                        
+                          <Sphere args={[0.2, 64]} position={arrow.position} ref={arrowRef} key={`${arrow.id}`} >
+                            <meshBasicMaterial color="white"/>
+                          </Sphere>
+                         
+                        
+                    </Trail>
+                    </mesh>
+                  
                   
                     
                  

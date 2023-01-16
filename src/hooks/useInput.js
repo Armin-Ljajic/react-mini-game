@@ -33,9 +33,8 @@ export const useInput = () => {
 
         const handleKeyUp = (e) => {
             setInput((m) => ({...m, [findKey(e.code)]: false}));
-            
         }
-
+        
         // const handleClick = (e) => {
         //     setInput((m) => ({...m, [findKey(e.code)]: true}));
         //     console.log(findKey(e.code))

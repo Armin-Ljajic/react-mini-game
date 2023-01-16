@@ -6,7 +6,7 @@ import { targetPositionState } from "../state/GameState";
 import { RigidBody } from '@react-three/rapier';
 
 
-export const Target = () => {
+export const Target = ({collision}) => {
     const [targetPosition, setTargetPosition] = useRecoilState(targetPositionState);
     // const distance = model.scene.position.distanceTo(player.position)
     const [pos, setPos] = useState([]);
@@ -35,12 +35,11 @@ export const Target = () => {
         pos,
             <>
             <group>
-                <RigidBody>
-                    
-                </RigidBody>
+                
                     <mesh onClick={onClick}>
                         <primitive object={model.scene} position={[3.5, 0.45, 21]} rotation={[0,1,0]} scale={1.5} name="target"/>
                     </mesh>
+                
 
             </group>
             </>
