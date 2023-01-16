@@ -13,6 +13,7 @@ import { lerp } from 'three/src/math/MathUtils';
 import {Target} from './Target';
 import { archerPositionState, targetPositionState } from "../state/GameState";
 import { useRecoilState } from 'recoil';
+import { useElapsedTime } from 'use-elapsed-time'
 
 
 
@@ -80,17 +81,17 @@ export function Model({action, position}) {
   const group = useRef()
   const currentAction = useRef("");
   const controlsRef = useRef(OrbitControls);
-  const {forward, backward, left, right, jump, shift, shoot} = useInput();
+  let {forward, backward, left, right, jump, shift, shoot} = useInput();
   const model = useGLTF('/ErikaArcherWithAimingAnimationsNew.glb');
   const arrowModel = useGLTF("/arrow.glb")
   const { actions } = useAnimations(model.animations, model.scene)
   const previousAction = usePrevious(action);
   const camera = useThree(state => state.camera);
   const {scene} = useThree();
-  const [arrows, setArrows] = useState([]);
+  const [arrows, setArrows] = useState([{id: 0,position: [0, 0, 0]}]);
   const [targetPosition, setTargetPosition] = useRecoilState(targetPositionState);
   const [arrowVisibility, setArrowVisibility] = useState(true);
-
+  const [playing, setPlaying] = useState(false);
 
 
   const api = useRef();
@@ -101,12 +102,19 @@ export function Model({action, position}) {
   const arrowRaycast = useForwardRaycastArrow(arrowRef);
   let enemyPosition = new THREE.Vector3();
   const sphere = [];
- 
   
+  const options = {
+   duration: 2,
+    isPlaying: playing,
+    onComplete: () => ({shouldRepeat: true, delay: 0, newStartAt: 0}) 
+  }
+
+  const { elapsedTime, reset } = useElapsedTime(options)
 
   const arrowSpeed = 80;
   const arrowCoolDown = 300;
   let timeToShoot = 0;
+  let timer = 0;
  
 
   const updateCameraTarget = (moveX, moveZ) => {
@@ -141,23 +149,23 @@ export function Model({action, position}) {
     if(controlsRef.current) controlsRef.current.target = cameraTarget;
 
 
-    if(arrowRef.current == undefined){
-      setArrows((arrows) => [
-        ...arrows,
-        {
-          id: now,
-          position: [0, 0, 0],
-          rotation: []
-          // forward: [arrowModel.scene.position.x += arrowDirectionX, arrowModel.scene.position.y += arrowDirectionY, arrowModel.scene.position.z += arrowDirectionZ]
-        }
-      ]);
-    }
+    // if(arrowRef.current == undefined){
+    //   setArrows((arrows) => [
+    //     ...arrows,
+    //     {
+    //       id: now,
+    //       position: [0, 0, 0],
+    //     }
+    //   ]);
+    // }
     // console.log(arrows)
     if(previousAction){
       // actions[previousAction].stop()
     }
     let action = "";
-    const now = Date.now();
+    
+    
+
     
     if(forward|| backward || left || right){
       action = "WalkForward";
@@ -171,8 +179,21 @@ export function Model({action, position}) {
       action = "Jump";
 
     } else if(shoot){
+      const now = Date.now();
       action = "StandingDrawArrow";
-      // actions[action]?.setLoop(THREE.LoopOnce)
+      // 1.0333333015441895
+      console.log(actions[action])
+      actions[action].clampWhenFinished = true;
+      actions[action].setLoop(THREE.LoopOnce, 1);
+      actions[action].timeScale = 1;
+      // if (now >= timer) {
+      //   timer = now + arrowCoolDown
+      //   action = "StandingDrawArrowRelease"
+      //   actions[action].clampWhenFinished = true;
+      //   actions[action].setLoop(THREE.LoopOnce, 1);
+      //   actions[action].timeScale = 1;
+
+      // }
 
     } else{
       action = "Idle";
@@ -204,7 +225,7 @@ export function Model({action, position}) {
     }, [action, actions, forward, backward, left, right, jump, shift, shoot, arrowVisibility]);
 
 
-    useFrame((state, delta, mouse) => {
+    useFrame((state, delta, mouse, clock) => {
       if(currentAction.current === "WalkForward" ||
       currentAction.current === "RunForward"
       ) {
@@ -290,7 +311,7 @@ export function Model({action, position}) {
        
         
       };
-
+      
       
       let cameraDirection = new Vector3();
       camera.getWorldDirection(cameraDirection);
@@ -381,7 +402,7 @@ export function Model({action, position}) {
           target={model.scene.position} 
           minPolarAngle={0} 
           maxPolarAngle={Math.PI / 2}
-          maxDistance={100}
+          maxDistance={10}
           />
           {/* <AimTarget position={camera.position}/> */}
           <group>
@@ -429,7 +450,7 @@ export function Model({action, position}) {
                     attenuation={(x) => { return  x * x}} // A function to define the width in each point along it.
                     target={arrowRef}
                     >
-                        <Sphere args={[0.5, 64]} position={arrow.position} ref={arrowRef} >
+                        <Sphere args={[1, 64]} position={arrow.position} ref={arrowRef} >
                           <meshBasicMaterial color="white"/>
                         </Sphere>
                        

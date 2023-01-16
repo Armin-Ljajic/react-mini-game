@@ -83,12 +83,12 @@ const Crosshair = () => {
 
     return (
         <group>
-            <group ref={lines}>
-                <Line start={[0.05,0,0]} end={[0.18,0,0]} />
-                <Line start={[0,0.05,0]} end={[0,0.18,0]} />
-                <Line start={[-0.05,0,0]} end={[-0.18,0,0]} />
-                <Line start={[0,-0.05,0]} end={[0,-0.18,0]} />
-           </group>
+            {/* <group ref={lines}>
+                <Line start={[0.05,0,0]} end={[10,0,0]} />
+                <Line start={[0,0.05,0]} end={[0,10,0]} />
+                <Line start={[-0.05,0,0]} end={[-10,0,0]} />
+                <Line start={[0,-0.05,0]} end={[0,-10,0]} />
+           </group> */}
             <mesh ref={dot}>
                 <sphereGeometry args={[0.0004, 64, 32]}/>
                 <meshBasicMaterial color={color} />

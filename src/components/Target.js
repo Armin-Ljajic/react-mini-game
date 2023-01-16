@@ -13,6 +13,7 @@ export const Target = () => {
     const model = useGLTF("/target.glb")
     const onClick = useCallback((e) => {
         e.stopPropagation();
+        
         setTargetPosition(model.scene.position);
         console.log(targetPosition)
       }, [targetPosition]);
