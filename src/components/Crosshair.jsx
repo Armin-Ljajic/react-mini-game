@@ -54,9 +54,8 @@ const Crosshair = () => {
         
         
 
-        if(intersects.length > 0 && intersects[0].object.name== "Circle001_0"){
+        if(intersects.length > 0 && intersects[0].object.geometry.name == "target") {
             setColor("red")
-            console.log(intersects[0].object.name)
         }
         else{
             setColor("white")

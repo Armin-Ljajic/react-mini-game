@@ -68,7 +68,7 @@ const useForwardRaycastArrow = (obj) => {
     if (!obj.current) return []
     raycaster.set(obj.current.getWorldPosition(pos), obj.current.getWorldDirection(dir))
     // raycaster.set(obj.current.getWorldPosition(pos), dir)
-    return raycaster.intersectObjects(scene.children)
+    return raycaster.intersectObjects(scene.children, true)
   }
 }
 
@@ -86,7 +86,8 @@ export function Model({action, position}) {
   const arrowModel = useGLTF("/arrow.glb")
   const { actions } = useAnimations(model.animations, model.scene)
   const previousAction = usePrevious(action);
-  const camera = useThree(state => state.camera);
+  // const camera = useThree(state => state.camera);
+  const {camera} = useThree();
   const {scene} = useThree();
   const [arrows, setArrows] = useState([{id: 0,position: [0, 0, 0]}]);
   const [targetPosition, setTargetPosition] = useRecoilState(targetPositionState);
@@ -101,16 +102,16 @@ export function Model({action, position}) {
   const arrowRef = useRef();
   const raycast = useForwardRaycast(ref);
   const arrowRaycast = useForwardRaycastArrow(arrowRef);
+  const raycaster = new THREE.Raycaster();
   
- 
+
   
 
 
   const arrowSpeed = 100;
   const arrowCoolDown = 300;
   let timeToShoot = 0;
-  let shootCd = 0;
-  let timer = 0;
+
  
 
   const updateCameraTarget = (moveX, moveZ) => {
@@ -134,7 +135,7 @@ export function Model({action, position}) {
   let cameraTarget = new THREE.Vector3();
   let storedFall = 0;
   const pos2 =  new Vector3()
-  let dir2 =  new Vector3()
+  const dir2 =  new Vector3()
   const arrowRaycaster = new THREE.Raycaster();
 
  
@@ -204,15 +205,12 @@ const setArrowRelease = (e) => {
       actions[action].setLoop(THREE.LoopOnce, 1);
       actions[action].timeScale = 1;
       setRelease(!release)
-      console.log(release);
 
     } else{
       action = "Idle";
       
     } 
     
-    console.log(release)
-    console.log(currentAction.current)
     
     if(currentAction.current != action){
       const nextActionToPlay = actions[action];
@@ -267,7 +265,6 @@ const setArrowRelease = (e) => {
           camera.position.x - model.scene.position.x,
           camera.position.z - model.scene.position.z
         )
-        console.log(targetPosition)
         // console.log(actions)
         
         //diagonal movement angle offset
@@ -344,15 +341,12 @@ const setArrowRelease = (e) => {
         
       };
       
+      const arrowTranslation = arrowApi.current.translation()
       
       let cameraDirection = new Vector3();
       camera.getWorldDirection(cameraDirection);
       const bulletDirection = cameraDirection.clone().multiplyScalar(35);
       
-      const vector = new Vector3(0, 0, 0).unproject(camera);
-        // dot.current.position.set(...vector.toArray());
-      
-      // let lookAt = arrowModel.scene.lookAt(direction);
 
       //Shooting
       const arrowDirectionX = cameraDirection.x * arrowSpeed * 20 * delta;
@@ -369,60 +363,116 @@ const setArrowRelease = (e) => {
       // arrowModel.scene.position.y += arrowDirectionY
       // arrowModel.scene.position.z += arrowDirectionZ
       
-      
-     
       arrowRef.current.position.x += arrowDirectionX 
       arrowRef.current.position.y += arrowDirectionY
       arrowRef.current.position.z += arrowDirectionZ 
      
+      
+      
       
       const arrowPosition = model.scene.position.clone()
       .add(cameraDirection.clone().multiplyScalar(2))
 
       
       
-     
+      arrowTranslation.x = arrowRef.current.position.x 
+      arrowTranslation.y = arrowRef.current.position.y
+      arrowTranslation.z = arrowRef.current.position.z 
+      // console.log(arrowTranslation)
+      // console.log("ref",arrowRef.current1.position)
+      
       
      
-
-      if(shoot) {
+      
+      if(shoot && !forward && !right && !left && !backward) {
         const now = Date.now();
         if (now >= timeToShoot) {
-          timeToShoot = now + arrowCoolDown;
+          timeToShoot = now + arrowCoolDown; 
           setArrows((arrows) => [
             ...arrows,
             {
               id: now,
               position: [arrowPosition.x, arrowPosition.y+2, arrowPosition.z],
-              // forward: [arrowDirectionX, arrowDirectionY, arrowDirectionZ]
             }
-          ]);
+          ].slice(1,2));
           
         }
        
-        
-      //  console.log(arrows)
-       
       }
-      
-      
+     
+
+
+      var dir = [arrowDirectionX, arrowDirectionY, arrowDirectionZ]
+      // var dir = camera.getWorldDirection(arrowRef.current.position);
+        var pos = [arrowRef.current.position.x, arrowRef.current.position.y, arrowRef.current.position.z]
 
       
+        
+        
+        // console.log(dir)
+        // console.log(pos)
+        
+        
+        // var dir3 = camera.getWorldDirection(dir);
+        // var pos3 = camera.getWorldPosition(pos)
+        // raycaster.set(pos, dir)
+        // var intersects = raycaster.intersectObjects(scene.children);
 
-      
-      // var dir = arrowRef.current.getWorldDirection(dir2);
-      // var pos = arrowRef.current.getWorldPosition(pos2)
-
+        
       // arrowRaycaster.set(arrowPosition, arrowRef.current.position);
       // console.log(arrowPosition, arrowRef.current.position)
       // console.log("pos",pos, "dir", dir2)
       var intersects = arrowRaycast();
       // var intersects = arrowRaycaster.intersectObjects(scene.children);
-      
-        if(intersects.length > 0 && intersects[0].object.name == "Circle001_0"){
-            // setArrowVisibility(false);
-            console.log("hit")
+      // if(intersects.length > 0 ){
+      //   console.log(intersects[0].object)
+        
+      // }
+      const BBS = new THREE.Box3();
+      let firstBB = new THREE.Box3().setFromObject(scene.children[0])
+      let secondBB = new THREE.Box3().setFromObject(scene.children[1])
+      let thirdBB = new THREE.Box3().setFromObject(scene.children[2])
+      let fourthBB = new THREE.Box3().setFromObject(scene.children[3])
+      let fifthBB = new THREE.Box3().setFromObject(scene.children[4])
+      let sixthBB = new THREE.Box3().setFromObject(scene.children[5])
+      let seventhBB = new THREE.Sphere().setFromPoints(scene.children[6])
+      let eightBB = new THREE.Box3().setFromObject(scene.children[7])
+      let ninthBB = new THREE.Box3().setFromObject(scene.children[8])
+      let tenthBB = new THREE.Box3().setFromObject(scene.children[9])
+      let elevenBB = new THREE.Box3().setFromObject(scene.children[10])
+      let twelveBB = new THREE.Box3().setFromObject(scene.children[11])
+      let thirteenBB = new THREE.Box3().setFromObject(scene.children[12])
+      let fourteenBB = new THREE.Box3().setFromObject(scene.children[13])
+
+      // console.log(scene.children)
+
+      const BBs = [firstBB, secondBB, thirdBB, fourthBB, fifthBB, sixthBB, seventhBB, eightBB, ninthBB, tenthBB, elevenBB, twelveBB, thirteenBB, fourteenBB]
+      BBs.forEach(bb => {
+        
+          const otherBBs = BBs.filter(other => other !== BBs[6]);
+          otherBBs.forEach(other => {
+              // if(BBs[6].intersectsBox(other)){
+              //   console.log(other)
+              // }
+            
+            })
+        
+        // console.log(bb.children)
+        
+
+        
+      })
+
+      if(BBs[6].intersectsBox(BBs[2])){
+        console.log("HIT",BBs[2])
+      }
+
+        if(intersects.length > 0){
+          arrowRef.current.position.copy(intersects[0].point)
+          console.log(intersects[0].object)
         }
+          
+        
       
       // else{
       //     setArrowVisibility(true);
@@ -439,23 +489,24 @@ const setArrowRelease = (e) => {
           <OrbitControls 
           ref={controlsRef} 
           target={model.scene.position} 
-          minPolarAngle={0} 
-          maxPolarAngle={Math.PI / 2}
-          maxDistance={10}
+          // minPolarAngle={0} 
+          // maxPolarAngle={Math.PI / 2}
+          maxDistance={10001}
           />
           {/* <AimTarget position={camera.position}/> */}
           <group>
             <RigidBody ref={api} colliders="ball" type="kinematicPosition" >
               <primitive 
               object={model.scene} 
-              ref={ref} name="Archer" 
+              ref={ref} 
+              name="Archer" 
               key={model.scene.uuid} 
               position={[-0.2, 3.05, 32]}/> 
             </RigidBody>
           
           </group>
             
-          {arrows.map((arrow, idx) => {
+          {arrows.map((arrow) => {
               return (
                <>
 
@@ -479,33 +530,33 @@ const setArrowRelease = (e) => {
                     
                     />
                   </mesh> */}
-                  
                     <mesh visible={!shoot}>
-                    <Trail
+                    {/* <Trail
                       width={2} // Width of the line
                       length={10}
                       color={'white'} // Color of the line
                       decay={10}
                       attenuation={(x) => {return x * x}} // A function to define the width in each point along it.
                       target={arrowRef}
-                      >
-                          <Sphere args={[0.3, 64]} position={arrow.position} ref={arrowRef} key={`${arrow.id}`} >
+                      > */}
+                        <RigidBody colliders="ball" 
+                                ref={arrowApi}
+                                type="kinematicPosition"
+                                onCollisionEnter={({manifold}) => {
+                                  console.log('Collision at world position ', manifold.solverContactPoint(0))
+                                }}
+                                
+                                >
+                          <Sphere args={[0.5, 64]} position={arrow.position} ref={arrowRef} key={`${arrow.id}`} name="sphere">
                             <meshBasicMaterial color="white"/>
                           </Sphere>
-                    </Trail>
+                       </RigidBody>
+                    {/* </Trail> */}
                     </mesh>
-                  
-                  
-                    
-                 
+                
                </> 
               );
-          })}
-
-          {/* <Enemy player={model.scene}/> */}
-          
-        
-
+          })}         
     </>
 
         

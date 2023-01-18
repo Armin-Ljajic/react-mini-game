@@ -142,21 +142,33 @@ return (
           floatIntensity={0.6}> */}
              {/* <Plane rotation={[-Math.PI / 2, 0, 0]} userData={{ id: "floor" }} /> */}
              {debug && <Debug/>}
-                <Target/>
-                <SwampModel/>
-                <Model/>
+                <Target name="Target"/>
+                <SwampModel name="swamp"/>
+                <Model name="archer"/>
                  
                 
              {/* <SceneParticles/> */}
-             <CuboidCollider castShadow args={[25, 10, 0.2]} position={[0, 5, 38]} name="Wall" />
-              <CuboidCollider castShadow args={[25, 10, 0.2]} position={[0, 5, -36]} name="Wall" />
-              <CuboidCollider
-              name="Wall"
-              castShadow
-                args={[75, 10, 0.2]}
-                rotation={[0, -Math.PI / 2, 0]}
-                position={[10, 5, 1]}
-              />
+             <RigidBody colliders="cuboid" type="fixed">
+              <CuboidCollider castShadow args={[25, 10, 0.2]} position={[0, 5, 38]} name="Wall" onCollisionEnter={({manifold}) => {
+                                  console.log('Collision at world position ', manifold.solverContactPoint(0))
+                                }}/>
+             </RigidBody>
+
+             <RigidBody colliders="cuboid" type="fixed">
+                <CuboidCollider castShadow args={[25, 10, 0.2]} position={[0, 5, -36]} name="Wall" />
+             </RigidBody>
+
+             <RigidBody colliders="cuboid" type="fixed">
+                <CuboidCollider
+                name="Wall"
+                castShadow
+                  args={[75, 10, 0.2]}
+                  rotation={[0, -Math.PI / 2, 0]}
+                  position={[10, 5, 1]}
+                />
+             </RigidBody>
+
+             <RigidBody colliders="cuboid" type="fixed">
               <CuboidCollider
               name="Wall"
               castShadow
@@ -164,6 +176,7 @@ return (
                 rotation={[0, -Math.PI / 2, 0]}
                 position={[-7, 5, 1]}
               />
+             </RigidBody>
                 
                   
                   {/*tree.map((tree) => {

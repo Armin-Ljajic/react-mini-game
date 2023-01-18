@@ -7,16 +7,9 @@ title: swamp location
 */
 
 import React, { Suspense, useEffect, useMemo, useRef } from 'react'
-import { Merged, Plane, Polyhedron, RoundedBox, useGLTF } from '@react-three/drei'
-import { useBox, usePlane, useConvexPolyhedron, useTrimesh } from '@react-three/cannon';
-import {Model} from '../components/Archer.js'
-import { GrassModel } from './Grass.js';
-import { BufferAttribute, Color, PlaneGeometry } from 'three';
-import { Geometry } from "three-stdlib";
+import { Merged, Plane, Polyhedron, RoundedBox, useGLTF } from '@react-three/drei';
 import { Physics, RigidBody, Debug, CuboidCollider, WorldApi, MeshCollider, useRapier } from "@react-three/rapier";
 import * as THREE from 'three'
-import getPixels from "get-image-pixels";
-import { useTexture } from "@react-three/drei";
 
 export function SwampModel(props) {
 
@@ -29,22 +22,6 @@ export function SwampModel(props) {
     texture.repeat.x = 10;
     texture.repeat.y = 10;
     return texture;
-}
-
-const GroundFloor = () => {
-  const arrayOfVerts = nodes.Object_3.geometry.attributes.position.array;
-  const vertices = useMemo(() => arrayOfVerts.map(point => new THREE.Vector3(point)), [arrayOfVerts])
-
-  return (
-    <RigidBody colliders="trimesh" type="fixed">
-      <mesh
-      rotation={[-Math.PI / 2, 0, -Math.PI / 2]}
-      geometry={nodes.Object_3.geometry}
-      >
-        <meshStandardMaterial map={materials.map_1lambert4SG.map}/>
-      </mesh>
-    </RigidBody>
-  )
 }
 
   return (
