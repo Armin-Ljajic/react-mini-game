@@ -13,7 +13,7 @@ import { lerp } from 'three/src/math/MathUtils';
 import {Target} from './Target';
 import { archerPositionState, targetPositionState } from "../state/GameState";
 import { useRecoilState } from 'recoil';
-import { useElapsedTime } from 'use-elapsed-time'
+import { useSpring, animated } from '@react-spring/three'
 
 
 
@@ -106,10 +106,11 @@ export function Model({action, position}) {
   
 
 
-  const arrowSpeed = 80;
+  const arrowSpeed = 100;
   const arrowCoolDown = 300;
   let timeToShoot = 0;
-
+  let shootCd = 0;
+  let timer = 0;
  
 
   const updateCameraTarget = (moveX, moveZ) => {
@@ -136,7 +137,23 @@ export function Model({action, position}) {
   let dir2 =  new Vector3()
   const arrowRaycaster = new THREE.Raycaster();
 
-  
+ 
+const setArrowRelease = (e) => {
+  if(e){
+    const nextActionToPlay = actions["StandingDrawArrowRelease"]
+    const current = actions[currentAction.current];
+    current?.fadeOut(0.2);
+    nextActionToPlay?.reset().fadeIn().play();
+    currentAction.current = action;
+    actions[action].clampWhenFinished = true;
+    actions[action].setLoop(THREE.LoopOnce, 1);
+    actions[action].timeScale = 1;
+    
+  }
+ 
+} 
+
+
   useEffect(() => {
     cameraTarget.x = model.scene.position.x;
     cameraTarget.y = model.scene.position.y + 2;
@@ -157,8 +174,8 @@ export function Model({action, position}) {
     if(previousAction){
       // actions[previousAction].stop()
     }
-    let action = "";
-    
+
+   
     
 
     
@@ -179,20 +196,23 @@ export function Model({action, position}) {
       actions[action].setLoop(THREE.LoopOnce, 1);
       actions[action].timeScale = 1;
       setRelease(true);
-      
-     
-    } else if(shoot == false && release === true){
+      // actions[action]._mixer.addEventListener('finished', setArrowRelease)
+
+    } else if(shoot == false && release == true){
       action = "StandingDrawArrowRelease";
       actions[action].clampWhenFinished = true;
       actions[action].setLoop(THREE.LoopOnce, 1);
       actions[action].timeScale = 1;
-      setRelease(false);
-      
-
+      setRelease(!release)
+      console.log(release);
 
     } else{
       action = "Idle";
+      
     } 
+    
+    console.log(release)
+    console.log(currentAction.current)
     
     if(currentAction.current != action){
       const nextActionToPlay = actions[action];
@@ -200,8 +220,19 @@ export function Model({action, position}) {
       current?.fadeOut(0.2);
       nextActionToPlay?.reset().fadeIn().play();
       currentAction.current = action;
-    
     }
+   
+   
+    
+    
+    
+    
+      // console.log("action",action)
+      // console.log("current",currentAction.current)
+      // console.log(release)
+
+      
+    
 
     //hide object from scene when it reaches target
     // const distance = model.scene.position.distanceTo(targetPosition);
@@ -213,11 +244,18 @@ export function Model({action, position}) {
     //   setArrowVisibility(true);
       
     // }
-
     // arrowRef.current.position.x += arrowDirectionX 
     //   arrowRef.current.position.y += arrowDirectionY
     //   arrowRef.current.position.z += arrowDirectionZ 
     }, [action, actions, forward, backward, left, right, jump, shift, shoot]);
+
+    // useEffect(() => {
+    //   timer = setTimeout(() => {
+    //     console.log("time")
+       
+    //  }, 1000);
+    //  return () => clearTimeout(timer);
+    // }, [timer])
 
 
     useFrame((state, delta, mouse, clock) => {
@@ -311,6 +349,8 @@ export function Model({action, position}) {
       camera.getWorldDirection(cameraDirection);
       const bulletDirection = cameraDirection.clone().multiplyScalar(35);
       
+      const vector = new Vector3(0, 0, 0).unproject(camera);
+        // dot.current.position.set(...vector.toArray());
       
       // let lookAt = arrowModel.scene.lookAt(direction);
 
@@ -345,7 +385,7 @@ export function Model({action, position}) {
       
      
 
-      if(currentAction.current === "StandingDrawArrowRelease") {
+      if(shoot) {
         const now = Date.now();
         if (now >= timeToShoot) {
           timeToShoot = now + arrowCoolDown;
@@ -354,16 +394,18 @@ export function Model({action, position}) {
             {
               id: now,
               position: [arrowPosition.x, arrowPosition.y+2, arrowPosition.z],
-              forward: [arrowDirectionX, arrowDirectionY, arrowDirectionZ]
+              // forward: [arrowDirectionX, arrowDirectionY, arrowDirectionZ]
             }
-          ].slice(1));
+          ]);
           
         }
        
+        
+      //  console.log(arrows)
        
       }
-      console.log(currentAction.current)
-
+      
+      
 
       
 
@@ -438,21 +480,18 @@ export function Model({action, position}) {
                     />
                   </mesh> */}
                   
-                    <mesh visible={currentAction.current === "StandingDrawArrowRelease"}>
+                    <mesh visible={!shoot}>
                     <Trail
                       width={2} // Width of the line
                       length={10}
                       color={'white'} // Color of the line
                       decay={10}
-                      attenuation={(x) => { return  x * x}} // A function to define the width in each point along it.
+                      attenuation={(x) => {return x * x}} // A function to define the width in each point along it.
                       target={arrowRef}
                       >
-                        
-                          <Sphere args={[0.2, 64]} position={arrow.position} ref={arrowRef} key={`${arrow.id}`} >
+                          <Sphere args={[0.3, 64]} position={arrow.position} ref={arrowRef} key={`${arrow.id}`} >
                             <meshBasicMaterial color="white"/>
                           </Sphere>
-                         
-                        
                     </Trail>
                     </mesh>
                   
