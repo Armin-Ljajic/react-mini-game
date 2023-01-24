@@ -5,7 +5,7 @@ import {Line, Vector3} from "three";
 import * as THREE from 'three'
 import { useMemo } from "react";
 import { Raycaster } from "three";
-import { targetPositionState } from "../state/GameState";
+import { crosshairPositionState } from "../state/GameState";
 import { useRecoilState } from "recoil";
 import { useState } from "react";
 import { Sphere } from "@react-three/drei/core";
@@ -36,18 +36,25 @@ const Crosshair = () => {
     const raycaster = useForwardRaycast(dot)
     const raycast = new THREE.Raycaster();
     const {scene} = useThree();
-    const [targetPosition, setTargetPosition] = useRecoilState(targetPositionState);
+    const [targetPosition, setTargetPosition] = useRecoilState(crosshairPositionState);
     const [color, setColor] = useState("")
     
     
     const pos2 =  new Vector3()
     const dir2 =  new Vector3()
     
+    
+    useEffect(() => {
+      
+    }, []);
+
     useFrame(({mouse}) => {
-        const vector = new Vector3(0, 0, 0).unproject(camera);
+        const vector = new Vector3(0, 0, -0.8).unproject(camera);
         dot.current.position.set(...vector.toArray());
         var dir = camera.getWorldDirection(dir2);
         var pos = camera.getWorldPosition(pos2)
+        
+        // console.log(targetPosition)
 
         raycast.set(pos, dir);
         var intersects = raycast.intersectObjects(scene.children);
@@ -61,6 +68,9 @@ const Crosshair = () => {
             setColor("white")
         }
 
+        setTargetPosition(...vector)
+        // const newvector = new Vector3(targetPosition)
+        // console.log(newvector)
     })
 
     const Line = (props) => {

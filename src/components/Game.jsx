@@ -16,6 +16,7 @@ import {Enemy} from '../components/Enemy'
 import { AimTarget } from "./AimTarget.js";
 import Crosshair from "./Crosshair.jsx";
 import { Target } from "./Target.js";
+import * as THREE from 'three'
 
 
 
@@ -113,8 +114,8 @@ function Game() {
 function AppGame(){ 
   const [action, setAction] = useState("StandingIdle")
   
-
-  
+  const boxGeometry = new THREE.BoxGeometry(1, 1, 1);
+  const wallMaterial = new THREE.MeshStandardMaterial({ color: 'slategrey' });
 
 return (
   <>
@@ -148,34 +149,48 @@ return (
                  
                 
              {/* <SceneParticles/> */}
-             <RigidBody colliders="cuboid" type="fixed">
-              <CuboidCollider castShadow args={[25, 10, 0.2]} position={[0, 5, 38]} name="Wall" onCollisionEnter={({manifold}) => {
-                                  console.log('Collision at world position ', manifold.solverContactPoint(0))
-                                }}/>
-             </RigidBody>
+             <RigidBody type="fixed" restitution={0.2} friction={0}>
+              <mesh 
+                castShadow 
+                // args={[25, 10, 0.2]} 
+                position={[0, 5, 38]} 
+                name="Wall" 
+                >
+                <boxGeometry  args={[25, 10, 0.2]} />
+                <meshStandardMaterial color="slategrey" wireframe/>
+              </mesh>
+              
+              <mesh 
+                castShadow 
+                // args={[25, 10, 0.2]} 
+                position={[0, 5, -36]} 
+                name="Wall" 
+                >
+                <boxGeometry   args={[25, 10, 0.2]}  />
+                <meshStandardMaterial color="slategrey"/>
+              </mesh>
 
-             <RigidBody colliders="cuboid" type="fixed">
-                <CuboidCollider castShadow args={[25, 10, 0.2]} position={[0, 5, -36]} name="Wall" />
-             </RigidBody>
-
-             <RigidBody colliders="cuboid" type="fixed">
-                <CuboidCollider
+              <mesh
                 name="Wall"
                 castShadow
-                  args={[75, 10, 0.2]}
-                  rotation={[0, -Math.PI / 2, 0]}
-                  position={[10, 5, 1]}
-                />
-             </RigidBody>
+                // args={[75, 10, 0.2]}
+                rotation={[0, -Math.PI / 2, 0]}
+                position={[10, 5, 1]}
+                >
+                <boxGeometry args={[75, 10, 0.2]}/>
+                <meshStandardMaterial color="slategrey"/>
+              </mesh>
 
-             <RigidBody colliders="cuboid" type="fixed">
-              <CuboidCollider
-              name="Wall"
-              castShadow
-                args={[75, 10, 0.2]}
+              <mesh
+                name="Wall"
+                castShadow
+                // args={[75, 10, 0.2]}
                 rotation={[0, -Math.PI / 2, 0]}
                 position={[-7, 5, 1]}
-              />
+                >
+                <boxGeometry args={[75, 10, 0.2]} />
+                <meshStandardMaterial color="slategrey"/>
+              </mesh>
              </RigidBody>
                 
                   
@@ -208,7 +223,7 @@ return (
           </Physics>
           </Suspense>
           <Lighting />
-          <Crosshair/>
+          {/* <Crosshair/> */}
           </Canvas>
       </div>
   

@@ -17,7 +17,7 @@ export const Target = (props) => {
     const onClick = useCallback((e) => {
         e.stopPropagation();
         
-        setTargetPosition(model.scene.position);
+        // setTargetPosition(model.scene.position);
         console.log(targetPosition)
       }, [targetPosition]);
 

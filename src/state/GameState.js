@@ -1,4 +1,6 @@
 import { atom } from "recoil";
+import { Vector3 } from "three";
+import { Vector2 } from "three";
 
 export const targetPositionState = atom({
     key: "targetPosition", // unique ID (with respect to other atoms/selectors)
@@ -15,4 +17,9 @@ export const targetPositionState = atom({
   export const archerPositionState = atom({
     key: "archerPosition", // unique ID (with respect to other atoms/selectors)
     default: { position: {}, rotation: {} }, // default value (aka initial value)
+  });
+
+  export const crosshairPositionState = atom({
+    key: "crosshairPosition", // unique ID (with respect to other atoms/selectors)
+    default: {position: new Vector3(0,0,0) }, // default value (aka initial value)
   });

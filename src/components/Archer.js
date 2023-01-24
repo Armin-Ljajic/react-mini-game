@@ -11,9 +11,10 @@ import { useInput } from '../hooks/useInput';
 import { Physics, RapierCollider, RigidBody, useRapier } from '@react-three/rapier';
 import { lerp } from 'three/src/math/MathUtils';
 import {Target} from './Target';
-import { archerPositionState, targetPositionState } from "../state/GameState";
-import { useRecoilState } from 'recoil';
+import { archerPositionState, targetPositionState, crosshairPositionState} from "../state/GameState";
+import { useRecoilState, useRecoilValue } from 'recoil';
 import { useSpring, animated } from '@react-spring/three'
+import Crosshair from './Crosshair';
 
 
 
@@ -75,7 +76,7 @@ const useForwardRaycastArrow = (obj) => {
 
 
 
-export function Model({action, position}) {
+export function Model({action}) {
   // const {pos} = Target();
 
   const group = useRef()
@@ -89,8 +90,8 @@ export function Model({action, position}) {
   // const camera = useThree(state => state.camera);
   const {camera} = useThree();
   const {scene} = useThree();
-  const [arrows, setArrows] = useState([{id: 0,position: [0, 0, 0]}]);
-  const [targetPosition, setTargetPosition] = useRecoilState(targetPositionState);
+  const [arrows, setArrows] = useState([{id: 0, position: [0, 0, 0], forward: [0, 0, 0]}]);
+  const crosshairPos = useRecoilValue(crosshairPositionState);
   const [arrowVisibility, setArrowVisibility] = useState(false);
   const [release, setRelease] = useState(false);
 
@@ -212,7 +213,7 @@ const setArrowRelease = (e) => {
     } 
     
     
-    if(currentAction.current != action){
+    if(currentAction.current !== action){
       const nextActionToPlay = actions[action];
       const current = actions[currentAction.current];
       current?.fadeOut(0.2);
@@ -289,17 +290,13 @@ const setArrowRelease = (e) => {
         walkDirection.applyAxisAngle(rotateAngle, newDirectionOffset)
 
         // run/walk velocity
-        let velocity = currentAction.current == "RunForward" ? 4 : 1.8;
+        let velocity = currentAction.current === "RunForward" ? 4 : 1.8;
 
 
         //intersections
         const intersections = raycast();
         
         
-        
-        const walkable = scene.children.filter(
-          (o) => o.children[0]?.uuid !== ref?.current?.uuid
-        );
   
       const translation = api.current.translation();
       if (translation.y < -1) {
@@ -345,8 +342,13 @@ const setArrowRelease = (e) => {
       
       let cameraDirection = new Vector3();
       camera.getWorldDirection(cameraDirection);
-      const bulletDirection = cameraDirection.clone().multiplyScalar(35);
-      
+
+      let bulletDirection = cameraDirection.clone().multiplyScalar(20);
+      // console.log(bulletDirection)
+
+      const vector = new Vector3(crosshairPos)
+      const arrowPosition = model.scene.position.clone()
+      .add(vector.clone().multiplyScalar(2))
 
       //Shooting
       const arrowDirectionX = cameraDirection.x * arrowSpeed * 20 * delta;
@@ -366,18 +368,20 @@ const setArrowRelease = (e) => {
       arrowRef.current.position.x += arrowDirectionX 
       arrowRef.current.position.y += arrowDirectionY
       arrowRef.current.position.z += arrowDirectionZ 
+
+      // arrowRef.current.position.x += bulletDirection.x
+      // arrowRef.current.position.y += bulletDirection.y
+      // arrowRef.current.position.z += bulletDirection.z
      
       
       
-      
-      const arrowPosition = model.scene.position.clone()
-      .add(cameraDirection.clone().multiplyScalar(2))
-
-      
+      // const vector = new Vector3(0, 0, -0.8).unproject(camera)
+      console.log(crosshairPos)
       
       arrowTranslation.x = arrowRef.current.position.x 
       arrowTranslation.y = arrowRef.current.position.y
       arrowTranslation.z = arrowRef.current.position.z 
+    
       // console.log(arrowTranslation)
       // console.log("ref",arrowRef.current1.position)
       
@@ -392,14 +396,16 @@ const setArrowRelease = (e) => {
             ...arrows,
             {
               id: now,
-              position: [arrowPosition.x, arrowPosition.y+2, arrowPosition.z],
+              position: [arrowPosition.x, arrowPosition.y, arrowPosition.z],
+              // forward: [bulletDirection.x, bulletDirection.y, bulletDirection.z]
             }
           ].slice(1,2));
           
         }
        
       }
-     
+      
+    
 
 
       var dir = [arrowDirectionX, arrowDirectionY, arrowDirectionZ]
@@ -428,48 +434,48 @@ const setArrowRelease = (e) => {
       //   console.log(intersects[0].object)
         
       // }
-      const BBS = new THREE.Box3();
-      let firstBB = new THREE.Box3().setFromObject(scene.children[0])
-      let secondBB = new THREE.Box3().setFromObject(scene.children[1])
-      let thirdBB = new THREE.Box3().setFromObject(scene.children[2])
-      let fourthBB = new THREE.Box3().setFromObject(scene.children[3])
-      let fifthBB = new THREE.Box3().setFromObject(scene.children[4])
-      let sixthBB = new THREE.Box3().setFromObject(scene.children[5])
-      let seventhBB = new THREE.Sphere().setFromPoints(scene.children[6])
-      let eightBB = new THREE.Box3().setFromObject(scene.children[7])
-      let ninthBB = new THREE.Box3().setFromObject(scene.children[8])
-      let tenthBB = new THREE.Box3().setFromObject(scene.children[9])
-      let elevenBB = new THREE.Box3().setFromObject(scene.children[10])
-      let twelveBB = new THREE.Box3().setFromObject(scene.children[11])
-      let thirteenBB = new THREE.Box3().setFromObject(scene.children[12])
-      let fourteenBB = new THREE.Box3().setFromObject(scene.children[13])
+      // const BBS = new THREE.Box3();
+      // let firstBB = new THREE.Box3().setFromObject(scene.children[0])
+      // let secondBB = new THREE.Box3().setFromObject(scene.children[1])
+      // let thirdBB = new THREE.Box3().setFromObject(scene.children[2])
+      // let fourthBB = new THREE.Box3().setFromObject(scene.children[3])
+      // let fifthBB = new THREE.Box3().setFromObject(scene.children[4])
+      // let sixthBB = new THREE.Box3().setFromObject(scene.children[5])
+      // let seventhBB = new THREE.Sphere().setFromPoints(scene.children[6])
+      // let eightBB = new THREE.Box3().setFromObject(scene.children[7])
+      // let ninthBB = new THREE.Box3().setFromObject(scene.children[8])
+      // let tenthBB = new THREE.Box3().setFromObject(scene.children[9])
+      // let elevenBB = new THREE.Box3().setFromObject(scene.children[10])
+      // let twelveBB = new THREE.Box3().setFromObject(scene.children[11])
+      // let thirteenBB = new THREE.Box3().setFromObject(scene.children[12])
+      // let fourteenBB = new THREE.Box3().setFromObject(scene.children[13])
 
       // console.log(scene.children)
 
-      const BBs = [firstBB, secondBB, thirdBB, fourthBB, fifthBB, sixthBB, seventhBB, eightBB, ninthBB, tenthBB, elevenBB, twelveBB, thirteenBB, fourteenBB]
-      BBs.forEach(bb => {
+      // const BBs = [firstBB, secondBB, thirdBB, fourthBB, fifthBB, sixthBB, seventhBB, eightBB, ninthBB, tenthBB, elevenBB, twelveBB, thirteenBB, fourteenBB]
+      // BBs.forEach(bb => {
         
-          const otherBBs = BBs.filter(other => other !== BBs[6]);
-          otherBBs.forEach(other => {
-              // if(BBs[6].intersectsBox(other)){
-              //   console.log(other)
-              // }
+      //     const otherBBs = BBs.filter(other => other !== BBs[6]);
+      //     otherBBs.forEach(other => {
+      //         // if(BBs[6].intersectsBox(other)){
+      //         //   console.log(other)
+      //         // }
             
-            })
+      //       })
         
-        // console.log(bb.children)
+      //   // console.log(bb.children)
         
 
         
-      })
+      // })
 
-      if(BBs[6].intersectsBox(BBs[2])){
-        console.log("HIT",BBs[2])
-      }
+      // if(BBs[6].intersectsBox(BBs[2])){
+      //   console.log("HIT",BBs[2])
+      // }
 
         if(intersects.length > 0){
           arrowRef.current.position.copy(intersects[0].point)
-          console.log(intersects[0].object)
+          // console.log(intersects[0].object)
         }
           
         
@@ -486,13 +492,15 @@ const setArrowRelease = (e) => {
       
     <>
           
-          <OrbitControls 
+          {/* <OrbitControls 
           ref={controlsRef} 
           target={model.scene.position} 
           // minPolarAngle={0} 
           // maxPolarAngle={Math.PI / 2}
           maxDistance={10001}
-          />
+          makeDefault={true}
+          /> */}
+          <PointerLockControls ref={controlsRef} camera={camera}/>
           {/* <AimTarget position={camera.position}/> */}
           <group>
             <RigidBody ref={api} colliders="ball" type="kinematicPosition" >
@@ -505,6 +513,7 @@ const setArrowRelease = (e) => {
             </RigidBody>
           
           </group>
+          <Crosshair position={model.scene.position}/>
             
           {arrows.map((arrow) => {
               return (
@@ -539,7 +548,8 @@ const setArrowRelease = (e) => {
                       attenuation={(x) => {return x * x}} // A function to define the width in each point along it.
                       target={arrowRef}
                       > */}
-                        <RigidBody colliders="ball" 
+                        <RigidBody 
+                                colliders="ball" 
                                 ref={arrowApi}
                                 type="kinematicPosition"
                                 onCollisionEnter={({manifold}) => {
@@ -547,8 +557,8 @@ const setArrowRelease = (e) => {
                                 }}
                                 
                                 >
-                          <Sphere args={[0.5, 64]} position={arrow.position} ref={arrowRef} key={`${arrow.id}`} name="sphere">
-                            <meshBasicMaterial color="white"/>
+                          <Sphere args={[1, 64]} position={arrow.position} ref={arrowRef} key={`${arrow.id}`} name="sphere">
+                            <meshBasicMaterial color="red"/>
                           </Sphere>
                        </RigidBody>
                     {/* </Trail> */}
