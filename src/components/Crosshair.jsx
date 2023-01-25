@@ -9,6 +9,8 @@ import { crosshairPositionState } from "../state/GameState";
 import { useRecoilState } from "recoil";
 import { useState } from "react";
 import { Sphere } from "@react-three/drei/core";
+// import img from '../Images/aimTarget.png'
+import { useTexture } from '@react-three/drei';
 
 
 const useForwardRaycast = (obj) => {
@@ -89,7 +91,7 @@ const Crosshair = () => {
             </line>
         )
     }
-
+   
     return (
         <group>
             {/* <group ref={lines}>
@@ -98,10 +100,20 @@ const Crosshair = () => {
                 <Line start={[-0.05,0,0]} end={[-10,0,0]} />
                 <Line start={[0,-0.05,0]} end={[0,-10,0]} />
            </group> */}
-            <mesh ref={dot}>
+            {/* <mesh ref={dot}>
                 <sphereGeometry args={[0.0004, 64, 32]}/>
                 <meshBasicMaterial color={color} />
+            </mesh> */}
+            <mesh ref={dot}>
+            <circleGeometry args={[0.0030, 64, 32]}/>
+                
+                <meshStandardMaterial
+                    attach="material"
+                    map={texture}
+                    transparent={true}
+                />
             </mesh>
+        
                 {/* <Sphere args={[0.0004, 64, 32]} ref={dot}>
                   <meshBasicMaterial color={color} />
                 </Sphere> */}

@@ -125,27 +125,28 @@ return (
         // flat
         camera={{
           fov: 50,
-          near: 0.1,
+          near: 0.2,
           far: 500,
           position: [-0.2, 12, 45],
           
         }}
+        
       >
           <ambientLight/>
           <pointLight position={[10, 10, 10]}/>
           <Suspense fallback={null}>
           <Environment background={"only"} files={process.env.PUBLIC_URL + "textures/bg.hdr"}/>            
           <Environment background={false} files={process.env.PUBLIC_URL + "textures/envmap.hdr"}/>
-          <Physics allowSleep={false}>
+          <Physics>
           {/* <Float 
           speed={0.5}
           rotationIntensity={0.6}
           floatIntensity={0.6}> */}
              {/* <Plane rotation={[-Math.PI / 2, 0, 0]} userData={{ id: "floor" }} /> */}
              {debug && <Debug/>}
-                <Target name="Target"/>
-                <SwampModel name="swamp"/>
-                <Model name="archer"/>
+                <Target name="Target" key="targetModel"/>
+                <SwampModel name="swamp" key="swampModel"/>
+                <Model name="archer" key="archer"/>
                  
                 
              {/* <SceneParticles/> */}
@@ -153,10 +154,10 @@ return (
               <mesh 
                 castShadow 
                 // args={[25, 10, 0.2]} 
-                position={[0, 5, 38]} 
-                name="Wall" 
+                position={[1.5, 5, 38]} 
+                name="Wall1" 
                 >
-                <boxGeometry  args={[25, 10, 0.2]} />
+                <boxGeometry  args={[16.65, 10, 0.2]} />
                 <meshStandardMaterial color="slategrey" wireframe/>
               </mesh>
               
@@ -164,35 +165,35 @@ return (
                 castShadow 
                 // args={[25, 10, 0.2]} 
                 position={[0, 5, -36]} 
-                name="Wall" 
+                name="Wall2" 
                 >
-                <boxGeometry   args={[25, 10, 0.2]}  />
-                <meshStandardMaterial color="slategrey"/>
+                <boxGeometry args={[20, 10, 0.2]}/>
+                <meshStandardMaterial color="slategrey" wireframe/>
               </mesh>
 
               <mesh
-                name="Wall"
+                name="Wall3"
                 castShadow
                 // args={[75, 10, 0.2]}
                 rotation={[0, -Math.PI / 2, 0]}
                 position={[10, 5, 1]}
                 >
                 <boxGeometry args={[75, 10, 0.2]}/>
-                <meshStandardMaterial color="slategrey"/>
+                <meshStandardMaterial color="slategrey" wireframe/>
               </mesh>
 
               <mesh
-                name="Wall"
+                name="Wall4"
                 castShadow
                 // args={[75, 10, 0.2]}
                 rotation={[0, -Math.PI / 2, 0]}
                 position={[-7, 5, 1]}
                 >
                 <boxGeometry args={[75, 10, 0.2]} />
-                <meshStandardMaterial color="slategrey"/>
+                <meshStandardMaterial color="slategrey" wireframe/>
               </mesh>
              </RigidBody>
-                
+             
                   
                   {/*tree.map((tree) => {
                     return <TreeModel position={tree.pos} rotation-y={tree.rotation}/>;
@@ -223,7 +224,7 @@ return (
           </Physics>
           </Suspense>
           <Lighting />
-          {/* <Crosshair/> */}
+          <Crosshair/>
           </Canvas>
       </div>
   

@@ -95,6 +95,9 @@ export function Model({action}) {
   const [arrowVisibility, setArrowVisibility] = useState(false);
   const [release, setRelease] = useState(false);
 
+  const { rapier, world } = useRapier();
+  const rapierWorld = world.raw();
+
 
   const api = useRef();
   const arrowApi = useRef();
@@ -258,6 +261,7 @@ const setArrowRelease = (e) => {
 
 
     useFrame((state, delta, mouse, clock) => {
+
       if(currentAction.current === "WalkForward" ||
       currentAction.current === "RunForward"
       ) {
@@ -307,9 +311,13 @@ const setArrowRelease = (e) => {
             translation.z =  0;
         }
     
-      // } else {
+
+
         walkDirection.y += (storedFall, -9.81 * delta, 0.10)
         storedFall = walkDirection.y
+        
+             
+       
         
         if(intersections.length > 0){
           model.scene.position.copy(intersections[0].point)
@@ -318,10 +326,41 @@ const setArrowRelease = (e) => {
           if(diff < 0.0){
             storedFall = 0;
             walkDirection.y += lerp(0, Math.abs(diff), 0.5);
-            // console.log(point);
           }
         }
 
+        var originPoint = model.scene.position.clone();
+      
+        
+       
+        raycaster.set(originPoint, walkDirection)
+        var intersects = raycaster.intersectObjects(scene.children);
+        if(intersects.length > 0 && intersects[0].object.name === "Wall1" && intersects[0].object.position.distanceTo(model.scene.position) < 20){
+          velocity = 0;
+          console.log(intersects[0].object.name, model.scene.position.distanceTo(intersects[0].object.position))
+        }
+        else if(intersects.length > 0 && intersects[0].object.name === "Wall2" && intersects[0].object.position.distanceTo(model.scene.position) < 20 ){
+          velocity = 0;
+          console.log(intersects[0].object.name, model.scene.position.distanceTo(intersects[0].object.position))
+        }
+        else if(intersects.length > 0 && intersects[0].object.name === "Wall3" && intersects[0].object.position.distanceTo(model.scene.position) < 30){
+          velocity = 0;
+          console.log(intersects[0].object.name, model.scene.position.distanceTo(intersects[0].object.position))
+        }
+        else if(intersects.length > 0 && intersects[0].object.name === "Wall4" && intersects[0].object.position.distanceTo(model.scene.position) < 30 ){
+          velocity = 0;
+          console.log(intersects[0].object.name, model.scene.position.distanceTo(intersects[0].object.position))
+        }
+        else if(intersects.length > 0 && intersects[0].object.name == "obj4" && intersects[0].object.position.distanceTo(model.scene.position) < 20 ){
+          velocity = 0;
+          console.log(intersects[0].object.name, model.scene.position.distanceTo(intersects[0].object.position))
+        }
+        else{
+          velocity = currentAction.current === "RunForward" ? 4 : 1.8;
+        }
+        
+        
+        // console.log(model.scene)
         // update model and camera
         const moveX = walkDirection.x * velocity * delta;
         const moveZ = walkDirection.z * velocity * delta;
@@ -331,10 +370,10 @@ const setArrowRelease = (e) => {
         translation.y = model.scene.position.y += walkDirection.y
         translation.z = model.scene.position.z += moveZ;
 
+       
+       
         updateCameraTarget(moveX, moveZ);
         
-
-       
         
       };
       
@@ -376,7 +415,7 @@ const setArrowRelease = (e) => {
       
       
       // const vector = new Vector3(0, 0, -0.8).unproject(camera)
-      console.log(crosshairPos)
+      // console.log(crosshairPos)
       
       arrowTranslation.x = arrowRef.current.position.x 
       arrowTranslation.y = arrowRef.current.position.y
@@ -412,7 +451,7 @@ const setArrowRelease = (e) => {
       // var dir = camera.getWorldDirection(arrowRef.current.position);
         var pos = [arrowRef.current.position.x, arrowRef.current.position.y, arrowRef.current.position.z]
 
-      
+       
         
         
         // console.log(dir)
@@ -492,18 +531,18 @@ const setArrowRelease = (e) => {
       
     <>
           
-          {/* <OrbitControls 
+          <OrbitControls 
           ref={controlsRef} 
           target={model.scene.position} 
           // minPolarAngle={0} 
           // maxPolarAngle={Math.PI / 2}
           maxDistance={10001}
-          makeDefault={true}
-          /> */}
-          <PointerLockControls ref={controlsRef} camera={camera}/>
+          // makeDefault={true}
+          />
+          {/* <PointerLockControls ref={controlsRef} camera={camera}/> */}
           {/* <AimTarget position={camera.position}/> */}
           <group>
-            <RigidBody ref={api} colliders="ball" type="kinematicPosition" >
+            <RigidBody ref={api} colliders="ball" type="kinematicPosition" restitution={0.2}>
               <primitive 
               object={model.scene} 
               ref={ref} 
@@ -513,7 +552,7 @@ const setArrowRelease = (e) => {
             </RigidBody>
           
           </group>
-          <Crosshair position={model.scene.position}/>
+          
             
           {arrows.map((arrow) => {
               return (
