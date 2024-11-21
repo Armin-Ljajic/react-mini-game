@@ -25,7 +25,7 @@
     "perlin.js": "^1.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-icons": "^4.7.1",
+    "react-icons": "^4.12.0",
     "react-scripts": "5.0.1",
     "react-three-fiber": "^6.0.13",
     "react-three-third-person": "^0.4.6",
